@@ -37,9 +37,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Copy composer files first (for better layer caching)
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
-# Install dependencies (cached unless composer.json/lock changes)
+# Install dependencies (cached unless composer.json changes)
+# Note: lock file will be generated during install
 RUN composer install --optimize-autoloader --no-dev --no-scripts --no-autoloader
 
 # Copy existing application directory contents

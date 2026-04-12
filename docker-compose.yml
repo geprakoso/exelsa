@@ -41,10 +41,10 @@ services:
     # Reduce memory usage for low-RAM servers
     command: --innodb-buffer-pool-size=128M --innodb-redo-log-capacity=100663296
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_PASSWORD: secret
+      MYSQL_USER: laravel
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
     ports:
       - "127.0.0.1:3307:3306"
