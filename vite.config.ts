@@ -7,7 +7,7 @@ export default defineConfig({
     plugins: [
         vue(),
         laravel({
-            input: 'resources/js/app.ts',
+            input: ['resources/js/app.ts', 'resources/css/inertia.css'],
             buildDirectory: 'build',
             publicDirectory: 'public',
         }),

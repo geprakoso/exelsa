@@ -23,25 +23,32 @@ class ProdukController extends Controller
         $kategoris = Kategori::all();
 
         return Inertia::render('app/admin/master-data/produk/Index', [
-            'produks' => $produks->items(),
+            'produks' => $produks,
             'brands' => $brands,
             'kategoris' => $kategoris,
-            'user' => auth()->user(),
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:produks',
-            'brand_id' => 'nullable|exists:brands,id',
-            'kategori_id' => 'nullable|exists:kategoris,id',
+            'nama_produk' => 'required|string|max:255',
+            'kategori_id' => 'nullable|exists:md_kategori,id',
+            'brand_id' => 'nullable|exists:md_brand,id',
+            'sku' => 'nullable|string|max:255|unique:md_produk,sku',
+            'sn' => 'nullable|string|max:255',
+            'garansi' => 'nullable|string|max:255',
+            'berat' => 'nullable|numeric|min:0',
+            'panjang' => 'nullable|numeric|min:0',
+            'lebar' => 'nullable|numeric|min:0',
+            'tinggi' => 'nullable|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'harga_beli' => 'nullable|numeric',
-            'harga_jual' => 'nullable|numeric',
-            'stok' => 'nullable|integer|min:0',
+            'image_url' => 'nullable|string',
         ]);
+
+        if (empty($validated['sku'])) {
+            $validated['sku'] = Produk::generateDefaultSku();
+        }
 
         Produk::create($validated);
 
@@ -51,14 +58,18 @@ class ProdukController extends Controller
     public function update(Request $request, Produk $produk)
     {
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:produks,sku,' . $produk->id,
-            'brand_id' => 'nullable|exists:brands,id',
-            'kategori_id' => 'nullable|exists:kategoris,id',
+            'nama_produk' => 'required|string|max:255',
+            'kategori_id' => 'nullable|exists:md_kategori,id',
+            'brand_id' => 'nullable|exists:md_brand,id',
+            'sku' => 'required|string|max:255|unique:md_produk,sku,' . $produk->id,
+            'sn' => 'nullable|string|max:255',
+            'garansi' => 'nullable|string|max:255',
+            'berat' => 'nullable|numeric|min:0',
+            'panjang' => 'nullable|numeric|min:0',
+            'lebar' => 'nullable|numeric|min:0',
+            'tinggi' => 'nullable|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'harga_beli' => 'nullable|numeric',
-            'harga_jual' => 'nullable|numeric',
-            'stok' => 'nullable|integer|min:0',
+            'image_url' => 'nullable|string',
         ]);
 
         $produk->update($validated);

@@ -2,83 +2,86 @@
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref, computed } from 'vue'
 import { usePage, useForm } from '@inertiajs/vue3'
-import { Plus, Search, Pencil, Trash2, Image, DollarSign } from 'lucide-vue-next'
+import { Plus, Search, Pencil, Trash2, Image } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
 import Card from '@/components/ui/card.vue'
 import Badge from '@/components/ui/badge.vue'
 import DataTable from '@/components/tables/DataTable.vue'
-import DropdownMenu from '@/components/ui/dropdown-menu/index.vue'
-import DropdownMenuContent from '@/components/ui/dropdown-menu/dropdown-menu-content.vue'
-import DropdownMenuItem from '@/components/ui/dropdown-menu/dropdown-menu-item.vue'
-import DropdownMenuSeparator from '@/components/ui/dropdown-menu/dropdown-menu-separator.vue'
-import DropdownMenuTrigger from '@/components/ui/dropdown-menu/dropdown-menu-item.vue'
+import Dialog from '@/components/ui/dialog.vue'
 import Sheet from '@/components/ui/sheet/index.vue'
 import SheetContent from '@/components/ui/sheet/sheet.vue'
 import FormField from '@/components/forms/FormField.vue'
 import RelationSelect from '@/components/forms/RelationSelect.vue'
-import CurrencyInput from '@/components/forms/CurrencyInput.vue'
-import Repeater from '@/components/forms/Repeater.vue'
-import { formatCurrency } from '@/lib/utils'
-
-const page = usePage()
 
 interface Produk {
     id: number
-    nama: string
+    nama_produk: string
     sku: string
-    brand: { id: number; nama: string }
-    kategori: { id: number; nama: string }
-    harga_beli: number
-    harga_jual: number
-    stok: number
-    foto: string[]
+    sn: string | null
+    garansi: string | null
+    brand: { id: number; nama_brand: string } | null
+    kategori: { id: number; nama_kategori: string } | null
+    berat: number | null
+    panjang: number | null
+    lebar: number | null
+    tinggi: number | null
+    deskripsi: string | null
+    image_url: string | null
 }
 
-const produks = ref<Produk[]>(page.props.produks || [])
+const page = usePage<{
+    produks: { data: Produk[]; current_page: number; last_page: number; per_page: number; total: number }
+    brands: { id: number; nama_brand: string }[]
+    kategoris: { id: number; nama_kategori: string }[]
+}>()
+
+const produks = computed(() => page.props.produks?.data || [])
+const pagination = computed(() => ({
+    current_page: page.props.produks?.current_page || 1,
+    last_page: page.props.produks?.last_page || 1,
+    per_page: page.props.produks?.per_page || 15,
+    total: page.props.produks?.total || 0,
+}))
+
 const isLoading = ref(false)
 const showDrawer = ref(false)
 const showDeleteModal = ref(false)
 const selectedProduk = ref<Produk | null>(null)
 const searchQuery = ref('')
 
-const pagination = ref({
-    current_page: 1,
-    last_page: 1,
-    per_page: 15,
-    total: 0,
-})
-
 const columns = [
-    { key: 'foto', label: 'Photo', sortable: false },
-    { key: 'nama', label: 'Name', sortable: true },
+    { key: 'image_url', label: 'Photo', sortable: false },
+    { key: 'nama_produk', label: 'Product Name', sortable: true },
     { key: 'sku', label: 'SKU', sortable: true },
     { key: 'brand', label: 'Brand', sortable: true },
     { key: 'kategori', label: 'Category', sortable: true },
-    { key: 'harga_beli', label: 'Purchase Price', sortable: true },
-    { key: 'harga_jual', label: 'Selling Price', sortable: true },
-    { key: 'stok', label: 'Stock', sortable: true },
+    { key: 'berat', label: 'Weight', sortable: false },
+    { key: 'dimensi', label: 'Dimensions', sortable: false },
 ]
 
 const form = useForm({
-    nama: '',
-    sku: '',
-    brand_id: null as number | null,
+    nama_produk: '',
     kategori_id: null as number | null,
+    brand_id: null as number | null,
+    sku: '',
+    sn: '',
+    garansi: '',
+    berat: null as number | null,
+    panjang: null as number | null,
+    lebar: null as number | null,
+    tinggi: null as number | null,
     deskripsi: '',
-    harga_beli: null as number | null,
-    harga_jual: null as number | null,
-    stok: 0,
-    foto: [] as string[],
+    image_url: '',
 })
 
 const brandOptions = computed(() =>
-    (page.props.brands || []).map((b: any) => ({ label: b.nama, value: b.id }))
+    (page.props.brands || []).map((b: any) => ({ label: b.nama_brand, value: b.id }))
 )
 
 const kategoriOptions = computed(() =>
-    (page.props.kategoris || []).map((k: any) => ({ label: k.nama, value: k.id }))
+    (page.props.kategoris || []).map((k: any) => ({ label: k.nama_kategori, value: k.id }))
 )
 
 function openCreateDrawer() {
@@ -90,13 +93,18 @@ function openCreateDrawer() {
 
 function openEditDrawer(produk: Produk) {
     selectedProduk.value = produk
-    form.nama = produk.nama
-    form.sku = produk.sku
+    form.nama_produk = produk.nama_produk
+    form.sku = produk.sku || ''
+    form.sn = produk.sn || ''
+    form.garansi = produk.garansi || ''
     form.brand_id = produk.brand?.id || null
     form.kategori_id = produk.kategori?.id || null
-    form.harga_beli = produk.harga_beli
-    form.harga_jual = produk.harga_jual
-    form.stok = produk.stok
+    form.berat = produk.berat
+    form.panjang = produk.panjang
+    form.lebar = produk.lebar
+    form.tinggi = produk.tinggi
+    form.deskripsi = produk.deskripsi || ''
+    form.image_url = produk.image_url || ''
     showDrawer.value = true
 }
 
@@ -106,11 +114,11 @@ function openDeleteModal(produk: Produk) {
 }
 
 function handleSort(field: string, direction: 'asc' | 'desc') {
-    // Handle sort
+    // TODO: implement server-side sort
 }
 
 function handlePageChange(page: number) {
-    pagination.value.current_page = page
+    // TODO: implement server-side pagination
 }
 
 function handleRowClick(produk: Produk) {
@@ -145,6 +153,11 @@ function deleteProduk() {
         })
     }
 }
+
+function formatDimensi(p: number | null, l: number | null, t: number | null): string {
+    if (!p && !l && !t) return '-'
+    return `${p || 0} x ${l || 0} x ${t || 0} cm`
+}
 </script>
 
 <template>
@@ -152,7 +165,7 @@ function deleteProduk() {
         <div class="flex-1 space-y-6 p-6">
             <PageHeader
                 title="Products"
-                description="Manage your product inventory and catalog."
+                description="Manage your product catalog and inventory."
                 :breadcrumbs="[
                     { label: 'Master Data', href: '/app/admin/master-data' },
                     { label: 'Products' }
@@ -187,11 +200,11 @@ function deleteProduk() {
                     @page-change="handlePageChange"
                     @row-click="handleRowClick"
                 >
-                    <template #cell:foto="{ row }">
+                    <template #cell:image_url="{ row }">
                         <div class="h-10 w-10 rounded-md overflow-hidden bg-muted">
                             <img
-                                v-if="row.original.foto?.[0]"
-                                :src="row.original.foto[0]"
+                                v-if="row.original.image_url"
+                                :src="row.original.image_url"
                                 class="h-full w-full object-cover"
                             />
                             <div v-else class="flex h-full w-full items-center justify-center">
@@ -201,31 +214,31 @@ function deleteProduk() {
                     </template>
                     
                     <template #cell:brand="{ row }">
-                        {{ row.original.brand?.nama || '-' }}
+                        <Badge v-if="row.original.brand" variant="secondary">
+                            {{ row.original.brand.nama_brand }}
+                        </Badge>
+                        <span v-else class="text-muted-foreground">-</span>
                     </template>
                     
                     <template #cell:kategori="{ row }">
-                        {{ row.original.kategori?.nama || '-' }}
-                    </template>
-                    
-                    <template #cell:harga_beli="{ row }">
-                        {{ formatCurrency(row.original.harga_beli) }}
-                    </template>
-                    
-                    <template #cell:harga_jual="{ row }">
-                        {{ formatCurrency(row.original.harga_jual) }}
-                    </template>
-                    
-                    <template #cell:stok="{ row }">
-                        <Badge :variant="row.original.stok < 10 ? 'destructive' : 'secondary'">
-                            {{ row.original.stok }}
+                        <Badge v-if="row.original.kategori" variant="info">
+                            {{ row.original.kategori.nama_kategori }}
                         </Badge>
+                        <span v-else class="text-muted-foreground">-</span>
+                    </template>
+                    
+                    <template #cell:berat="{ row }">
+                        {{ row.original.berat ? row.original.berat + ' gram' : '-' }}
+                    </template>
+                    
+                    <template #cell:dimensi="{ row }">
+                        {{ formatDimensi(row.original.panjang, row.original.lebar, row.original.tinggi) }}
                     </template>
                 </DataTable>
             </Card>
         </div>
         
-        <Sheet :open="showDrawer" @update:open="showDrawer = $event" class="w-[500px]">
+        <Sheet :open="showDrawer" @update:open="showDrawer = $event" class="w-[600px]">
             <SheetContent>
                 <div class="space-y-6">
                     <div>
@@ -238,14 +251,9 @@ function deleteProduk() {
                     </div>
                     
                     <form @submit.prevent="submitForm" class="space-y-4">
-                        <FormField label="Product Name" name="nama" required>
-                            <Input v-model="form.nama" placeholder="Enter product name" />
-                            <p v-if="form.errors.nama" class="text-sm text-red-500">{{ form.errors.nama }}</p>
-                        </FormField>
-                        
-                        <FormField label="SKU" name="sku" required>
-                            <Input v-model="form.sku" placeholder="Enter SKU" />
-                            <p v-if="form.errors.sku" class="text-sm text-red-500">{{ form.errors.sku }}</p>
+                        <FormField label="Product Name" name="nama_produk" required>
+                            <Input v-model="form.nama_produk" placeholder="Enter product name" />
+                            <p v-if="form.errors.nama_produk" class="text-sm text-red-500">{{ form.errors.nama_produk }}</p>
                         </FormField>
                         
                         <div class="grid grid-cols-2 gap-4">
@@ -266,18 +274,48 @@ function deleteProduk() {
                             </FormField>
                         </div>
                         
+                        <FormField label="SKU" name="sku">
+                            <Input v-model="form.sku" placeholder="Auto-generated if empty" />
+                            <p v-if="form.errors.sku" class="text-sm text-red-500">{{ form.errors.sku }}</p>
+                        </FormField>
+                        
                         <div class="grid grid-cols-2 gap-4">
-                            <FormField label="Purchase Price" name="harga_beli">
-                                <CurrencyInput v-model="form.harga_beli" />
+                            <FormField label="Serial Number" name="sn">
+                                <Input v-model="form.sn" placeholder="SN (optional)" />
                             </FormField>
                             
-                            <FormField label="Selling Price" name="harga_jual">
-                                <CurrencyInput v-model="form.harga_jual" />
+                            <FormField label="Warranty" name="garansi">
+                                <Input v-model="form.garansi" placeholder="Warranty period" />
                             </FormField>
                         </div>
                         
-                        <FormField label="Initial Stock" name="stok">
-                            <Input v-model.number="form.stok" type="number" min="0" />
+                        <FormField label="Weight (gram)" name="berat">
+                            <Input v-model.number="form.berat" type="number" min="0" placeholder="Weight in grams" />
+                        </FormField>
+                        
+                        <div class="grid grid-cols-3 gap-4">
+                            <FormField label="Length (cm)" name="panjang">
+                                <Input v-model.number="form.panjang" type="number" min="0" />
+                            </FormField>
+                            <FormField label="Width (cm)" name="lebar">
+                                <Input v-model.number="form.lebar" type="number" min="0" />
+                            </FormField>
+                            <FormField label="Height (cm)" name="tinggi">
+                                <Input v-model.number="form.tinggi" type="number" min="0" />
+                            </FormField>
+                        </div>
+                        
+                        <FormField label="Description" name="deskripsi">
+                            <textarea
+                                v-model="form.deskripsi"
+                                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Product description"
+                                rows="3"
+                            ></textarea>
+                        </FormField>
+                        
+                        <FormField label="Image URL" name="image_url">
+                            <Input v-model="form.image_url" placeholder="https://..." />
                         </FormField>
                         
                         <div class="flex justify-end gap-2 pt-4 border-t">
@@ -297,7 +335,7 @@ function deleteProduk() {
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">Delete Product</h2>
                 <p class="text-muted-foreground">
-                    Are you sure you want to delete <strong>{{ selectedProduk?.nama }}</strong>?
+                    Are you sure you want to delete <strong>{{ selectedProduk?.nama_produk }}</strong>?
                     This action cannot be undone.
                 </p>
                 <div class="flex justify-end gap-2 pt-4">
