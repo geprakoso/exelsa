@@ -6,7 +6,8 @@ const checkbox = cn(
     'peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground'
 )
 
-defineProps<{ class?: string; checked?: boolean; disabled?: boolean }>()
+const modelValue = defineModel<boolean>()
+const props = defineProps<{ class?: string; disabled?: boolean }>()
 </script>
 
 <template>
@@ -14,12 +15,8 @@ defineProps<{ class?: string; checked?: boolean; disabled?: boolean }>()
         <input
             type="checkbox"
             :class="cn(checkbox, props.class)"
-            :checked="checked"
+            v-model="modelValue"
             :disabled="disabled"
         />
     </div>
 </template>
-
-<script lang="ts">
-const props = defineProps<{ class?: string; checked?: boolean; disabled?: boolean }>()
-</script>

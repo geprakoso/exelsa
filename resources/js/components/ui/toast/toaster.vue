@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { cn } from '@/lib/utils'
+import { useToast } from '@/composables/useToast'
+import Toast from '@/components/ui/toast.vue'
 
 const { toasts, dismiss } = useToast()
 
@@ -25,9 +27,3 @@ const props = defineProps<{ class?: string }>()
         </Toast>
     </div>
 </template>
-
-<script lang="ts">
-import { cn } from '@/lib/utils'
-
-const props = defineProps<{ class?: string }>()
-</script>

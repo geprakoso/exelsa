@@ -33,6 +33,7 @@
         "joaopaulolndev/filament-edit-profile": "^1.0",
         "laravel/boost": "^2.0",
         "laravel/framework": "^12.0",
+        "laravel/mcp": "^0.6.7",
         "laravel/pail": "^1.2.2",
         "laravel/sail": "^1.41",
         "laravel/tinker": "^2.10.1",

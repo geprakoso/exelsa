@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, provide } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { ref, provide, onMounted } from 'vue'
+import { Link, router } from '@inertiajs/vue3'
 import { cn } from '@/lib/utils'
 import {
     Users,
@@ -30,7 +30,23 @@ const props = defineProps<{
 }>()
 
 const isMobileMenuOpen = ref(false)
-const activeMainNav = ref('dashboard')
+
+function getActiveSectionFromPath(path: string): string {
+    if (path.includes('/master-data')) return 'master-data'
+    if (path.includes('/transactions')) return 'transactions'
+    if (path.includes('/inventory')) return 'inventory'
+    if (path.includes('/akunting')) return 'akunting'
+    if (path.includes('/settings') || path.includes('/users')) return 'settings'
+    return 'dashboard'
+}
+
+const activeMainNav = ref(getActiveSectionFromPath(window.location.pathname))
+
+onMounted(() => {
+    router.on('navigate', (event) => {
+        activeMainNav.value = getActiveSectionFromPath(event.detail.page.url)
+    })
+})
 
 provide('mobileMenuOpen', isMobileMenuOpen)
 provide('toggleMobileMenu', () => {

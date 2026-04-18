@@ -1,6 +1,4 @@
-<script setup lang="ts">
-import { h, ref, type VNode } from 'vue'
-import Toast from './toast.vue'
+import { ref } from 'vue'
 
 interface Toast {
     id: string
@@ -15,7 +13,7 @@ const toasts = ref<Toast[]>([])
 function addToast(toast: Omit<Toast, 'id'>) {
     const id = Math.random().toString(36).slice(2, 9)
     toasts.value.push({ id, ...toast })
-    
+
     setTimeout(() => {
         dismiss(id)
     }, toast.duration ?? 5000)
@@ -54,4 +52,3 @@ export function useToast() {
         dismiss,
     }
 }
-</script>

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 const radioGroup = cn('grid gap-2')
 
-defineProps<{ class?: string }>()
+const props = defineProps<{ class?: string }>()
 </script>
 
 <template>
@@ -12,7 +12,3 @@ defineProps<{ class?: string }>()
         <slot />
     </div>
 </template>
-
-<script lang="ts">
-const props = defineProps<{ class?: string }>()
-</script>

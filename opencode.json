@@ -15,6 +15,10 @@
         "MYSQL_PASSWORD": "laravel",
         "MYSQL_DATABASE": "laravel"
       }
+    },
+    "arabica": {
+      "type": "local",
+      "command": ["docker", "exec", "-i", "arabica-app", "php", "artisan", "mcp:start", "arabica-server"]
     }
   }
 }

@@ -6,6 +6,8 @@ export interface TextareaProps extends /* @vue-ignore */ HTMLAttributes<HTMLText
     error?: boolean
 }
 
+const modelValue = defineModel<string | number>()
+
 const props = defineProps<TextareaProps>()
 
 const computedClass = computed(() => {
@@ -18,5 +20,5 @@ const computedClass = computed(() => {
 </script>
 
 <template>
-    <textarea :class="computedClass" />
+    <textarea v-model="modelValue" :class="computedClass" />
 </template>

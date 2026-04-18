@@ -6,6 +6,8 @@ export interface SelectProps extends /* @vue-ignore */ HTMLAttributes<HTMLSelect
     error?: boolean
 }
 
+const modelValue = defineModel<string | number>()
+
 const props = defineProps<SelectProps>()
 
 const computedClass = computed(() => {
@@ -18,7 +20,7 @@ const computedClass = computed(() => {
 </script>
 
 <template>
-    <select :class="computedClass" :disabled="disabled || readonly">
+    <select v-model="modelValue" :class="computedClass">
         <slot />
     </select>
 </template>

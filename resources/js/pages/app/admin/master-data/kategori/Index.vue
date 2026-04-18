@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { usePage, useForm } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
@@ -22,12 +22,21 @@ interface Kategori {
     is_active: boolean
 }
 
-const kategoriList = ref<Kategori[]>(page.props.kategori || [])
 const isLoading = ref(false)
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const selectedKategori = ref<Kategori | null>(null)
 const searchQuery = ref('')
+
+const kategoriList = computed(() => {
+    const list = (page.props.kategori as Kategori[]) || []
+    if (!searchQuery.value) return list
+    
+    return list.filter(kat => 
+        kat.nama_kategori.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        kat.kode.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+})
 
 const pagination = ref({
     current_page: 1,

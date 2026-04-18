@@ -2,7 +2,7 @@
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref, computed } from 'vue'
 import { usePage, useForm } from '@inertiajs/vue3'
-import { Plus, Search, Pencil, Trash2, Image } from 'lucide-vue-next'
+import { Plus, Search, Pencil, Trash2, Image, X, LayoutPanelLeft, Maximize2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
@@ -31,6 +31,8 @@ interface Produk {
     image_url: string | null
 }
 
+type ViewMode = 'sheet' | 'modal'
+
 const page = usePage<{
     produks: { data: Produk[]; current_page: number; last_page: number; per_page: number; total: number }
     brands: { id: number; nama_brand: string }[]
@@ -46,10 +48,11 @@ const pagination = computed(() => ({
 }))
 
 const isLoading = ref(false)
-const showDrawer = ref(false)
+const showForm = ref(false)
 const showDeleteModal = ref(false)
 const selectedProduk = ref<Produk | null>(null)
 const searchQuery = ref('')
+const viewMode = ref<ViewMode>('sheet') // Default ke sheet, bisa diubah ke modal
 
 const columns = [
     { key: 'image_url', label: 'Photo', sortable: false },
@@ -84,14 +87,14 @@ const kategoriOptions = computed(() =>
     (page.props.kategoris || []).map((k: any) => ({ label: k.nama_kategori, value: k.id }))
 )
 
-function openCreateDrawer() {
+function openCreateForm() {
     selectedProduk.value = null
     form.reset()
     form.clearErrors()
-    showDrawer.value = true
+    showForm.value = true
 }
 
-function openEditDrawer(produk: Produk) {
+function openEditForm(produk: Produk) {
     selectedProduk.value = produk
     form.nama_produk = produk.nama_produk
     form.sku = produk.sku || ''
@@ -105,7 +108,11 @@ function openEditDrawer(produk: Produk) {
     form.tinggi = produk.tinggi
     form.deskripsi = produk.deskripsi || ''
     form.image_url = produk.image_url || ''
-    showDrawer.value = true
+    showForm.value = true
+}
+
+function closeForm() {
+    showForm.value = false
 }
 
 function openDeleteModal(produk: Produk) {
@@ -122,21 +129,21 @@ function handlePageChange(page: number) {
 }
 
 function handleRowClick(produk: Produk) {
-    openEditDrawer(produk)
+    openEditForm(produk)
 }
 
 function submitForm() {
     if (selectedProduk.value) {
         form.put(`/app/admin/master-data/produk/${selectedProduk.value.id}`, {
             onSuccess: () => {
-                showDrawer.value = false
+                showForm.value = false
                 form.reset()
             },
         })
     } else {
         form.post('/app/admin/master-data/produk', {
             onSuccess: () => {
-                showDrawer.value = false
+                showForm.value = false
                 form.reset()
             },
         })
@@ -158,6 +165,10 @@ function formatDimensi(p: number | null, l: number | null, t: number | null): st
     if (!p && !l && !t) return '-'
     return `${p || 0} x ${l || 0} x ${t || 0} cm`
 }
+
+function toggleViewMode(mode: ViewMode) {
+    viewMode.value = mode
+}
 </script>
 
 <template>
@@ -172,9 +183,11 @@ function formatDimensi(p: number | null, l: number | null, t: number | null): st
                 ]"
             >
                 <template #actions>
-                    <Button @click="openCreateDrawer">
-                        <Plus class="h-4 w-4 mr-2" />
-                        Add Product
+                    <!-- Create Product Button -->
+                    <Button @click="openCreateForm" class="gap-2">
+                        <Plus class="h-4 w-4" />
+                        <span class="hidden sm:inline">Create Product</span>
+                        <span class="sm:hidden">Create</span>
                     </Button>
                 </template>
             </PageHeader>
@@ -238,19 +251,59 @@ function formatDimensi(p: number | null, l: number | null, t: number | null): st
             </Card>
         </div>
         
-        <Sheet :open="showDrawer" @update:open="showDrawer = $event" class="w-[600px]">
-            <SheetContent>
-                <div class="space-y-6">
-                    <div>
-                        <h2 class="text-lg font-semibold">
-                            {{ selectedProduk ? 'Edit Product' : 'Create Product' }}
-                        </h2>
-                        <p class="text-sm text-muted-foreground">
-                            {{ selectedProduk ? 'Update product information' : 'Add a new product to your catalog' }}
-                        </p>
+        <!-- Sheet/Slide Canvas Mode -->
+        <Sheet v-if="viewMode === 'sheet'">
+            <SheetContent :open="showForm" @update:open="showForm = $event" class="w-[600px] sm:max-w-[600px]">
+                <div class="space-y-6 h-full flex flex-col">
+                    <!-- Header dengan Title, Toggle Mode, dan Close Button -->
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h2 class="text-lg font-semibold">
+                                {{ selectedProduk ? 'Edit Product' : 'Create Product' }}
+                            </h2>
+                            <p class="text-sm text-muted-foreground">
+                                {{ selectedProduk ? 'Update product information' : 'Add a new product to your catalog' }}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <!-- Toggle View Mode -->
+                            <div class="flex items-center gap-1 rounded-lg border bg-muted p-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-7 w-7"
+                                    :class="viewMode === 'sheet' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
+                                    @click="toggleViewMode('sheet')"
+                                    title="Slide Canvas Mode"
+                                >
+                                    <LayoutPanelLeft class="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-7 w-7"
+                                    :class="viewMode === 'modal' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
+                                    @click="toggleViewMode('modal')"
+                                    title="Modal/Popup Mode"
+                                >
+                                    <Maximize2 class="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
+                            <!-- Close Button -->
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="shrink-0"
+                                @click="closeForm"
+                                title="Close"
+                            >
+                                <X class="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
                     
-                    <form @submit.prevent="submitForm" class="space-y-4">
+                    <!-- Form Content -->
+                    <form @submit.prevent="submitForm" class="space-y-4 flex-1 overflow-y-auto pr-2">
                         <FormField label="Product Name" name="nama_produk" required>
                             <Input v-model="form.nama_produk" placeholder="Enter product name" />
                             <p v-if="form.errors.nama_produk" class="text-sm text-red-500">{{ form.errors.nama_produk }}</p>
@@ -317,19 +370,152 @@ function formatDimensi(p: number | null, l: number | null, t: number | null): st
                         <FormField label="Image URL" name="image_url">
                             <Input v-model="form.image_url" placeholder="https://..." />
                         </FormField>
-                        
-                        <div class="flex justify-end gap-2 pt-4 border-t">
-                            <Button type="button" variant="outline" @click="showDrawer = false">
-                                Cancel
-                            </Button>
-                            <Button type="submit" :loading="form.processing">
-                                {{ selectedProduk ? 'Update' : 'Create' }}
-                            </Button>
-                        </div>
                     </form>
+                    
+                    <!-- Footer Actions -->
+                    <div class="flex justify-end gap-2 pt-4 border-t">
+                        <Button type="button" variant="outline" @click="closeForm">
+                            Cancel
+                        </Button>
+                        <Button type="submit" :loading="form.processing" @click="submitForm">
+                            {{ selectedProduk ? 'Update Product' : 'Create Product' }}
+                        </Button>
+                    </div>
                 </div>
             </SheetContent>
         </Sheet>
+        
+        <!-- Modal/Dialog Mode -->
+        <Dialog v-else :open="showForm" @update:open="showForm = $event" class="max-w-2xl max-h-[90vh]">
+            <div class="space-y-6 flex flex-col max-h-[calc(90vh-3rem)]">
+                <!-- Header dengan Title, Toggle Mode, dan Close Button -->
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            {{ selectedProduk ? 'Edit Product' : 'Create Product' }}
+                        </h2>
+                        <p class="text-sm text-muted-foreground">
+                            {{ selectedProduk ? 'Update product information' : 'Add a new product to your catalog' }}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 -mr-2 -mt-2">
+                        <!-- Toggle View Mode -->
+                        <div class="flex items-center gap-1 rounded-lg border bg-muted p-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="h-7 w-7"
+                                :class="viewMode === 'sheet' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
+                                @click="toggleViewMode('sheet')"
+                                title="Slide Canvas Mode"
+                            >
+                                <LayoutPanelLeft class="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="h-7 w-7"
+                                :class="viewMode === 'modal' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
+                                @click="toggleViewMode('modal')"
+                                title="Modal/Popup Mode"
+                            >
+                                <Maximize2 class="h-3.5 w-3.5" />
+                            </Button>
+                        </div>
+                        <!-- Close Button -->
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            class="shrink-0"
+                            @click="closeForm"
+                            title="Close"
+                        >
+                            <X class="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+                
+                <!-- Form Content -->
+                <form @submit.prevent="submitForm" class="space-y-4 overflow-y-auto pr-2">
+                    <FormField label="Product Name" name="nama_produk" required>
+                        <Input v-model="form.nama_produk" placeholder="Enter product name" />
+                        <p v-if="form.errors.nama_produk" class="text-sm text-red-500">{{ form.errors.nama_produk }}</p>
+                    </FormField>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <FormField label="Brand" name="brand_id">
+                            <RelationSelect
+                                v-model="form.brand_id"
+                                :options="brandOptions"
+                                placeholder="Select brand"
+                            />
+                        </FormField>
+                        
+                        <FormField label="Category" name="kategori_id">
+                            <RelationSelect
+                                v-model="form.kategori_id"
+                                :options="kategoriOptions"
+                                placeholder="Select category"
+                            />
+                        </FormField>
+                    </div>
+                    
+                    <FormField label="SKU" name="sku">
+                        <Input v-model="form.sku" placeholder="Auto-generated if empty" />
+                        <p v-if="form.errors.sku" class="text-sm text-red-500">{{ form.errors.sku }}</p>
+                    </FormField>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <FormField label="Serial Number" name="sn">
+                            <Input v-model="form.sn" placeholder="SN (optional)" />
+                        </FormField>
+                        
+                        <FormField label="Warranty" name="garansi">
+                            <Input v-model="form.garansi" placeholder="Warranty period" />
+                        </FormField>
+                    </div>
+                    
+                    <FormField label="Weight (gram)" name="berat">
+                        <Input v-model.number="form.berat" type="number" min="0" placeholder="Weight in grams" />
+                    </FormField>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <FormField label="Length (cm)" name="panjang">
+                            <Input v-model.number="form.panjang" type="number" min="0" />
+                        </FormField>
+                        <FormField label="Width (cm)" name="lebar">
+                            <Input v-model.number="form.lebar" type="number" min="0" />
+                        </FormField>
+                        <FormField label="Height (cm)" name="tinggi">
+                            <Input v-model.number="form.tinggi" type="number" min="0" />
+                        </FormField>
+                    </div>
+                    
+                    <FormField label="Description" name="deskripsi">
+                        <textarea
+                            v-model="form.deskripsi"
+                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Product description"
+                            rows="3"
+                        ></textarea>
+                    </FormField>
+                    
+                    <FormField label="Image URL" name="image_url">
+                        <Input v-model="form.image_url" placeholder="https://..." />
+                    </FormField>
+                </form>
+                
+                <!-- Footer Actions -->
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <Button type="button" variant="outline" @click="closeForm">
+                        Cancel
+                    </Button>
+                    <Button type="submit" :loading="form.processing" @click="submitForm">
+                        {{ selectedProduk ? 'Update Product' : 'Create Product' }}
+                    </Button>
+                </div>
+            </div>
+        </Dialog>
         
         <Dialog :open="showDeleteModal" @update:open="showDeleteModal = $event" class="max-w-md">
             <div class="space-y-4">

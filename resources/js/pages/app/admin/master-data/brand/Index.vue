@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { usePage, useForm, router } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
@@ -20,16 +20,27 @@ const page = usePage()
 
 interface Brand {
     id: number
-    nama: string
-    deskripsi: string
+    nama_brand: string
 }
 
-const brands = ref<Brand[]>(page.props.brands || [])
 const isLoading = ref(false)
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const selectedBrand = ref<Brand | null>(null)
 const searchQuery = ref('')
+
+const form = useForm({
+    nama_brand: '',
+})
+
+const brands = computed(() => {
+    const list = (page.props.brands as Brand[]) || []
+    if (!searchQuery.value) return list
+    
+    return list.filter(brand => 
+        brand.nama_brand.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+})
 
 const pagination = ref({
     current_page: 1,
@@ -39,14 +50,8 @@ const pagination = ref({
 })
 
 const columns = [
-    { key: 'nama', label: 'Name', sortable: true },
-    { key: 'deskripsi', label: 'Description', sortable: false },
+    { key: 'nama_brand', label: 'Name', sortable: true },
 ]
-
-const form = useForm({
-    nama: '',
-    deskripsi: '',
-})
 
 function openCreateModal() {
     selectedBrand.value = null
@@ -57,8 +62,7 @@ function openCreateModal() {
 
 function openEditModal(brand: Brand) {
     selectedBrand.value = brand
-    form.nama = brand.nama
-    form.deskripsi = brand.deskripsi
+    form.nama_brand = brand.nama_brand
     showCreateModal.value = true
 }
 
@@ -151,13 +155,8 @@ function deleteBrand() {
                 </h2>
                 
                 <form @submit.prevent="submitForm" class="space-y-4">
-                    <FormField label="Name" name="nama" required>
-                        <Input v-model="form.nama" placeholder="Enter brand name" />
-                        <p v-if="form.errors.nama" class="text-sm text-red-500">{{ form.errors.nama }}</p>
-                    </FormField>
-                    
-                    <FormField label="Description" name="deskripsi">
-                        <Input v-model="form.deskripsi" placeholder="Enter description" />
+                    <FormField label="Name" name="nama_brand" :error="form.errors.nama_brand" required>
+                        <Input v-model="form.nama_brand" :error="!!form.errors.nama_brand" placeholder="Enter brand name" />
                     </FormField>
                     
                     <div class="flex justify-end gap-2 pt-4">
@@ -174,7 +173,7 @@ function deleteBrand() {
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">Delete Brand</h2>
                 <p class="text-muted-foreground">
-                    Are you sure you want to delete <strong>{{ selectedBrand?.nama }}</strong>?
+                    Are you sure you want to delete <strong>{{ selectedBrand?.nama_brand }}</strong>?
                 </p>
                 <div class="flex justify-end gap-2 pt-4">
                     <Button variant="outline" @click="showDeleteModal = false">Cancel</Button>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Mcp\McpSseController;
 use App\Filament\Pages\AppDashboard;
 use App\Http\Controllers\App\AkunTransaksiController;
 use App\Http\Controllers\App\BrandController;
@@ -14,6 +15,15 @@ use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Laravel\Mcp\Facades\Mcp;
+use App\Mcp\Servers\ArabicaServer;
+
+// MCP SSE Endpoint untuk Opencode - harus didaftarkan SEBELUM Mcp::web()
+Route::get('/mcp/arabica', McpSseController::class)->name('mcp.arabica.sse');
+
+// Register MCP endpoints
+Mcp::web('/mcp/arabica-json', ArabicaServer::class);
+Mcp::local('arabica-server', ArabicaServer::class);
 
 Route::get('/test-auth', function () {
     $user = Auth::user();

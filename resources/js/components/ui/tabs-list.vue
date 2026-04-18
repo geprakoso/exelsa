@@ -6,7 +6,7 @@ const tabsList = cn(
     'inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground'
 )
 
-defineProps<{ class?: string }>()
+const props = defineProps<{ class?: string }>()
 </script>
 
 <template>
@@ -18,7 +18,3 @@ defineProps<{ class?: string }>()
         <slot />
     </div>
 </template>
-
-<script lang="ts">
-const props = defineProps<{ class?: string }>()
-</script>

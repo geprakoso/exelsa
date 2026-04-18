@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils'
 
-defineProps<{ class?: string }>()
+const props = defineProps<{ class?: string }>()
 </script>
 
 <template>
@@ -9,7 +9,3 @@ defineProps<{ class?: string }>()
         <slot />
     </p>
 </template>
-
-<script lang="ts">
-const props = defineProps<{ class?: string }>()
-</script>

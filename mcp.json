@@ -1,0 +1,14 @@
+{
+  "name": "Arabica POS System",
+  "version": "1.0.0",
+  "description": "MCP Server untuk sistem POS Arabica - mengelola produk, penjualan, member, stok, dan laporan keuangan",
+  "servers": {
+    "arabica": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp/arabica",
+      "headers": {
+        "Accept": "application/json"
+      }
+    }
+  }
+}

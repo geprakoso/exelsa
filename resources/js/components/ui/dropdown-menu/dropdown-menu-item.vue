@@ -2,7 +2,7 @@
 import { cn } from '@/lib/utils'
 import { Link } from '@inertiajs/vue3'
 
-defineProps<{ class?: string }>()
+const props = defineProps<{ class?: string }>()
 </script>
 
 <template>
@@ -10,7 +10,3 @@ defineProps<{ class?: string }>()
         <slot />
     </Link>
 </template>
-
-<script lang="ts">
-const props = defineProps<{ class?: string }>()
-</script>

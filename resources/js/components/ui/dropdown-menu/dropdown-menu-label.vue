@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { cn } from '@/lib/utils'
 
-defineProps<{ class?: string }>()
+const props = defineProps<{ class?: string }>()
 </script>
 
 <template>
@@ -10,7 +10,3 @@ defineProps<{ class?: string }>()
         <slot />
     </div>
 </template>
-
-<script lang="ts">
-const props = defineProps<{ class?: string }>()
-</script>

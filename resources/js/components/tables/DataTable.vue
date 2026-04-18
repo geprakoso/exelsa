@@ -1,9 +1,12 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, h } from 'vue'
 import {
     useVueTable,
     createColumnHelper,
     FlexRender,
+    getCoreRowModel,
+    getSortedRowModel,
+    getPaginationRowModel,
     type SortingState,
     type PaginationState,
     type ColumnDef,
@@ -20,6 +23,12 @@ import {
     Check,
 } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import Table from '@/components/ui/table.vue'
+import TableHeader from '@/components/ui/table-header.vue'
+import TableBody from '@/components/ui/table-body.vue'
+import TableRow from '@/components/ui/table-row.vue'
+import TableHead from '@/components/ui/table-head.vue'
+import TableCell from '@/components/ui/table-cell.vue'
 import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
 import Checkbox from '@/components/ui/checkbox.vue'
@@ -141,9 +150,9 @@ const table = useVueTable({
     onPaginationChange: (updater) => {
         pagination.value = typeof updater === 'function' ? updater(pagination.value) : updater
     },
-    getCoreRowModel: () => {},
-    getSortedRowModel: () => {},
-    getPaginationRowModel: () => {},
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
 })
 
 const selectedIds = computed(() => {
@@ -178,7 +187,7 @@ function goToPage(page: number) {
                 <TableBody>
                     <template v-if="loading">
                         <TableRow v-for="i in 5" :key="i">
-                            <TableCell v-for="col in (props.selectable ? columns.length + 1 : columns.length)" :key="col">
+                            <TableCell v-for="col in (props.selectable ? props.columns.length + 1 : props.columns.length)" :key="col">
                                 <div class="h-4 w-full animate-pulse rounded bg-muted" />
                             </TableCell>
                         </TableRow>
@@ -201,7 +210,7 @@ function goToPage(page: number) {
                     </template>
                     <template v-else>
                         <TableRow>
-                            <TableCell :colspan="columns.length + (props.selectable ? 1 : 0)" class="h-24 text-center">
+                            <TableCell :colspan="props.columns.length + (props.selectable ? 1 : 0)" class="h-24 text-center">
                                 No results.
                             </TableCell>
                         </TableRow>
@@ -213,8 +222,8 @@ function goToPage(page: number) {
         <div v-if="pagination" class="flex items-center justify-between">
             <div class="text-sm text-muted-foreground">
                 Showing {{ pagination.pageIndex * pagination.pageSize + 1 }} to
-                {{ Math.min((pagination.pageIndex + 1) * pagination.pageSize, pagination.total || 0) }}
-                of {{ pagination.total }} entries
+                {{ Math.min((pagination.pageIndex + 1) * pagination.pageSize, props.pagination?.total || 0) }}
+                of {{ props.pagination?.total || 0 }} entries
                 <span v-if="selectedIds.length > 0">
                     ({{ selectedIds.length }} selected)
                 </span>
@@ -231,7 +240,7 @@ function goToPage(page: number) {
                 </Button>
                 <div class="flex items-center gap-1">
                     <Button
-                        v-for="page in pagination.last_page"
+                        v-for="page in (props.pagination?.last_page || 1)"
                         :key="page"
                         :variant="pagination.pageIndex + 1 === page ? 'default' : 'outline'"
                         size="sm"

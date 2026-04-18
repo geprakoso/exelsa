@@ -6,7 +6,7 @@ const tabsContent = cn(
     'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 )
 
-defineProps<{ value: string; class?: string }>()
+const props = defineProps<{ value: string; class?: string }>()
 </script>
 
 <template>
@@ -19,7 +19,3 @@ defineProps<{ value: string; class?: string }>()
         <slot />
     </div>
 </template>
-
-<script lang="ts">
-const props = defineProps<{ value: string; class?: string }>()
-</script>

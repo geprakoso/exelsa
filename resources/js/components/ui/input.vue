@@ -11,6 +11,8 @@ export interface InputProps extends /* @vue-ignore */ HTMLAttributes<HTMLInputEl
     error?: boolean
 }
 
+const modelValue = defineModel<string | number>()
+
 const props = defineProps<InputProps>()
 
 const computedClass = computed(() => {
@@ -23,5 +25,5 @@ const computedClass = computed(() => {
 </script>
 
 <template>
-    <input :class="computedClass" />
+    <input v-model="modelValue" :class="computedClass" />
 </template>
