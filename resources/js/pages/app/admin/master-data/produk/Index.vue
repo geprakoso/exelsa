@@ -13,7 +13,7 @@ import Dialog from '@/components/ui/dialog.vue'
 import Sheet from '@/components/ui/sheet/index.vue'
 import SheetContent from '@/components/ui/sheet/sheet.vue'
 import FormField from '@/components/forms/FormField.vue'
-import RelationSelect from '@/components/forms/RelationSelect.vue'
+import RelationSelect, { type SelectOption } from '@/components/forms/RelationSelect.vue'
 
 interface Produk {
     id: number
@@ -79,12 +79,20 @@ const form = useForm({
     image_url: '',
 })
 
-const brandOptions = computed(() =>
-    (page.props.brands || []).map((b: any) => ({ label: b.nama_brand, value: b.id }))
+const brandOptions = computed<SelectOption[]>(() =>
+    (page.props.brands || []).map((b: any) => ({ 
+        label: b.nama_brand, 
+        value: b.id,
+        description: b.kode ? `Code: ${b.kode}` : undefined
+    }))
 )
 
-const kategoriOptions = computed(() =>
-    (page.props.kategoris || []).map((k: any) => ({ label: k.nama_kategori, value: k.id }))
+const kategoriOptions = computed<SelectOption[]>(() =>
+    (page.props.kategoris || []).map((k: any) => ({ 
+        label: k.nama_kategori, 
+        value: k.id,
+        description: k.kode ? `Code: ${k.kode}` : undefined
+    }))
 )
 
 function openCreateForm() {
@@ -442,23 +450,31 @@ function toggleViewMode(mode: ViewMode) {
                         <p v-if="form.errors.nama_produk" class="text-sm text-red-500">{{ form.errors.nama_produk }}</p>
                     </FormField>
                     
-                    <div class="grid grid-cols-2 gap-4">
-                        <FormField label="Brand" name="brand_id">
-                            <RelationSelect
-                                v-model="form.brand_id"
-                                :options="brandOptions"
-                                placeholder="Select brand"
-                            />
-                        </FormField>
-                        
-                        <FormField label="Category" name="kategori_id">
-                            <RelationSelect
-                                v-model="form.kategori_id"
-                                :options="kategoriOptions"
-                                placeholder="Select category"
-                            />
-                        </FormField>
-                    </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <FormField label="Brand" name="brand_id" required>
+                                <RelationSelect
+                                    v-model="form.brand_id"
+                                    :options="brandOptions"
+                                    placeholder="Select brand..."
+                                    search-placeholder="Search brand..."
+                                    empty-message="No brands found"
+                                    icon="building"
+                                    :clearable="true"
+                                />
+                            </FormField>
+                            
+                            <FormField label="Category" name="kategori_id" required>
+                                <RelationSelect
+                                    v-model="form.kategori_id"
+                                    :options="kategoriOptions"
+                                    placeholder="Select category..."
+                                    search-placeholder="Search category..."
+                                    empty-message="No categories found"
+                                    icon="tag"
+                                    :clearable="true"
+                                />
+                            </FormField>
+                        </div>
                     
                     <FormField label="SKU" name="sku">
                         <Input v-model="form.sku" placeholder="Auto-generated if empty" />

@@ -166,7 +166,13 @@ class ProdukResource extends BaseResource
                                     ->unique(ignoreRecord: true),
 
                                 Forms\Components\Select::make('kategori_id')
-                                    ->relationship('kategori', 'nama_kategori')
+                                    ->label('Kategori')
+                                    ->relationship(
+                                        name: 'kategori',
+                                        titleAttribute: 'nama_kategori',
+                                        modifyQueryUsing: fn(\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_active', true)->orderBy('nama_kategori')
+                                    )
+                                    ->getOptionLabelFromRecordUsing(fn(\App\Models\Kategori $record) => "{$record->nama_kategori} ({$record->kode})")
                                     ->searchable()
                                     ->preload()
                                     ->live()
@@ -175,12 +181,28 @@ class ProdukResource extends BaseResource
                                         if ($sku) $set('sku', $sku);
                                     })
                                     ->createOptionForm([
-                                        Forms\Components\TextInput::make('nama_kategori')->required(),
+                                        Forms\Components\TextInput::make('nama_kategori')
+                                            ->label('Nama Kategori')
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\Toggle::make('is_active')
+                                            ->label('Aktif')
+                                            ->default(true),
                                     ])
+                                    ->createOptionUsing(function (array $data): int {
+                                        $kategori = \App\Models\Kategori::create($data);
+                                        return $kategori->id;
+                                    })
                                     ->required(),
 
                                 Forms\Components\Select::make('brand_id')
-                                    ->relationship('brand', 'nama_brand')
+                                    ->label('Brand')
+                                    ->relationship(
+                                        name: 'brand',
+                                        titleAttribute: 'nama_brand',
+                                        modifyQueryUsing: fn(\Illuminate\Database\Eloquent\Builder $query) => $query->where('is_active', true)->orderBy('nama_brand')
+                                    )
+                                    ->getOptionLabelFromRecordUsing(fn(\App\Models\Brand $record) => "{$record->nama_brand} ({$record->kode})")
                                     ->searchable()
                                     ->preload()
                                     ->live()
@@ -189,8 +211,18 @@ class ProdukResource extends BaseResource
                                         if ($sku) $set('sku', $sku);
                                     })
                                     ->createOptionForm([
-                                        Forms\Components\TextInput::make('nama_brand')->required(),
+                                        Forms\Components\TextInput::make('nama_brand')
+                                            ->label('Nama Brand')
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\Toggle::make('is_active')
+                                            ->label('Aktif')
+                                            ->default(true),
                                     ])
+                                    ->createOptionUsing(function (array $data): int {
+                                        $brand = \App\Models\Brand::create($data);
+                                        return $brand->id;
+                                    })
                                     ->required(),
                             ]),
                     ]),

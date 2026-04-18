@@ -63,4 +63,9 @@ class Kategori extends Model
         return Str::upper(Str::random(3));
     }
 
+    public function produk()
+    {
+        return $this->hasMany(Produk::class);
+    }
+
 }
