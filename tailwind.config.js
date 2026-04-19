@@ -60,5 +60,5 @@ export default {
             },
         },
     },
-    plugins: [forms, typography],
+    plugins: [forms({ strategy: 'class' }), typography],
 }

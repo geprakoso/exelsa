@@ -206,14 +206,6 @@ defineExpose({
 
 <template>
   <div :class="cn('relative w-full', props.class)">
-    <style>
-      /* Remove default browser focus styles */
-      .search-input-no-border:focus {
-        outline: none !important;
-        box-shadow: none !important;
-        border: none !important;
-      }
-    </style>
     <!-- Trigger Button -->
     <button
       ref="triggerRef"
@@ -405,3 +397,12 @@ defineExpose({
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* Remove default browser focus styles from search input */
+.search-input-no-border:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+</style>
