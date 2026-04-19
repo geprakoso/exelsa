@@ -206,6 +206,14 @@ defineExpose({
 
 <template>
   <div :class="cn('relative w-full', props.class)">
+    <style>
+      /* Remove default browser focus styles */
+      .search-input-no-border:focus {
+        outline: none !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+    </style>
     <!-- Trigger Button -->
     <button
       ref="triggerRef"
@@ -302,14 +310,14 @@ defineExpose({
         }"
       >
         <!-- Search Input -->
-        <div class="flex items-center border-b px-3 py-2 gap-2">
+        <div class="flex items-center border-b border-gray-100 px-3 py-2 gap-2">
           <Search class="h-4 w-4 shrink-0 text-muted-foreground" />
           <input
             ref="searchInputRef"
             v-model="searchQuery"
             type="text"
             :placeholder="searchPlaceholder"
-            class="flex h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            class="search-input-no-border flex h-8 w-full bg-transparent text-sm border-0 outline-none ring-0 focus:ring-0 focus:outline-none focus:border-0 placeholder:text-muted-foreground"
             @keydown="handleKeydown"
           />
           <!-- Clear search button -->
