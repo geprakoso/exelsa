@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { usePage, useForm } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2, Image, X, LayoutPanelLeft, Maximize2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
@@ -52,7 +52,22 @@ const showForm = ref(false)
 const showDeleteModal = ref(false)
 const selectedProduk = ref<Produk | null>(null)
 const searchQuery = ref('')
-const viewMode = ref<ViewMode>('sheet') // Default ke sheet, bisa diubah ke modal
+// Load view mode from localStorage or default to 'sheet'
+const STORAGE_KEY = 'produk-form-view-mode'
+const viewMode = ref<ViewMode>('sheet')
+
+// Load saved preference on mount
+onMounted(() => {
+    const savedMode = localStorage.getItem(STORAGE_KEY) as ViewMode | null
+    if (savedMode && ['sheet', 'modal'].includes(savedMode)) {
+        viewMode.value = savedMode
+    }
+})
+
+// Save preference when changed
+watch(viewMode, (newMode) => {
+    localStorage.setItem(STORAGE_KEY, newMode)
+})
 
 const columns = [
     { key: 'image_url', label: 'Photo', sortable: false },
