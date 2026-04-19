@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 import { 
   Check, 
   ChevronsUpDown, 
@@ -51,6 +52,7 @@ const triggerRef = ref<HTMLButtonElement | null>(null)
 const dropdownRef = ref<HTMLDivElement | null>(null)
 const searchInputRef = ref<HTMLInputElement | null>(null)
 const activeIndex = ref(-1)
+const ignoreNextClick = ref(false) // Flag to prevent double toggle when focus opens dropdown
 
 // Dropdown positioning
 const dropdownPosition = ref({
@@ -96,7 +98,7 @@ function updatePosition() {
   }
 }
 
-function openDropdown() {
+function openDropdown(highlightFirst = false) {
   if (props.disabled || props.loading) return
   
   isOpen.value = true
@@ -106,16 +108,28 @@ function openDropdown() {
     updatePosition()
     searchInputRef.value?.focus()
     
-    // Set active index to selected item
+    // Set active index to selected item or first item
     if (selectedOption.value) {
       const index = filteredOptions.value.findIndex(opt => opt.value === selectedOption.value?.value)
       if (index >= 0) activeIndex.value = index
+    } else if (highlightFirst && filteredOptions.value.length > 0) {
+      // Auto-highlight first non-disabled option
+      const firstEnabledIndex = filteredOptions.value.findIndex(opt => !opt.disabled)
+      if (firstEnabledIndex >= 0) activeIndex.value = firstEnabledIndex
     }
   })
   
   // Add event listeners
   window.addEventListener('scroll', updatePosition, true)
   window.addEventListener('resize', updatePosition)
+}
+
+// Handle focus event - open dropdown when focused via Tab
+function handleFocus() {
+  if (!isOpen.value && !props.disabled && !props.loading) {
+    ignoreNextClick.value = true // Flag that focus opened the dropdown
+    openDropdown(true) // highlightFirst = true
+  }
 }
 
 function closeDropdown() {
@@ -128,6 +142,12 @@ function closeDropdown() {
 }
 
 function toggleDropdown() {
+  // If focus already opened the dropdown, ignore this click to prevent closing it immediately
+  if (ignoreNextClick.value) {
+    ignoreNextClick.value = false
+    return
+  }
+  
   if (isOpen.value) {
     closeDropdown()
   } else {
@@ -179,7 +199,17 @@ function handleKeydown(e: KeyboardEvent) {
       }
       break
     case 'Tab':
-      closeDropdown()
+      e.preventDefault()
+      // Option A: Select the active/highlighted option and close dropdown
+      if (activeIndex.value >= 0 && filteredOptions.value[activeIndex.value]) {
+        selectOption(filteredOptions.value[activeIndex.value])
+      } else {
+        closeDropdown()
+      }
+      // Move focus to next element
+      nextTick(() => {
+        triggerRef.value?.blur()
+      })
       break
   }
 }
@@ -194,6 +224,11 @@ function scrollToActive() {
 // Watch for external changes
 watch(() => props.modelValue, () => {
   searchQuery.value = ''
+})
+
+// Close dropdown when clicking outside
+onClickOutside(dropdownRef, () => {
+  if (isOpen.value) closeDropdown()
 })
 
 // Expose for parent
@@ -220,6 +255,7 @@ defineExpose({
       }"
       @click="toggleDropdown"
       @keydown="handleKeydown"
+      @focus="handleFocus"
     >
       <!-- Left: Icon + Label -->
       <span class="flex items-center gap-2 min-w-0 flex-1">
@@ -282,13 +318,6 @@ defineExpose({
 
     <!-- Dropdown Portal -->
     <Teleport to="body">
-      <!-- Backdrop -->
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-40 bg-transparent"
-        @click="closeDropdown"
-      />
-      
       <!-- Dropdown -->
       <div
         v-if="isOpen"
