@@ -153,4 +153,14 @@ class Produk extends Model
     {
         return $this->hasMany(PenjualanItem::class, 'id_produk');
     }
+
+    public function images()
+    {
+        return $this->hasMany(ProdukImage::class)->orderBy('sort_order');
+    }
+
+    public function primaryImage()
+    {
+        return $this->hasOne(ProdukImage::class)->where('is_primary', true);
+    }
 }

@@ -30,6 +30,7 @@
         "guava/calendar": "*",
         "icetalker/filament-table-repeater": "^1.4",
         "inertiajs/inertia-laravel": "^2.0",
+        "intervention/image-laravel": "^4.0",
         "joaopaulolndev/filament-edit-profile": "^1.0",
         "laravel/boost": "^2.0",
         "laravel/framework": "^12.0",

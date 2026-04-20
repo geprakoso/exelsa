@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref, computed, onMounted, watch } from 'vue'
-import { usePage, useForm } from '@inertiajs/vue3'
+import { usePage, useForm, router } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2, Image, X, LayoutPanelLeft, Maximize2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Button from '@/components/ui/button.vue'
@@ -14,6 +14,7 @@ import Sheet from '@/components/ui/sheet/index.vue'
 import SheetContent from '@/components/ui/sheet/sheet.vue'
 import FormField from '@/components/forms/FormField.vue'
 import RelationSelect, { type SelectOption } from '@/components/forms/RelationSelect.vue'
+import MultiImageUpload, { type ProdukImage } from '@/components/ui/MultiImageUpload.vue'
 
 interface Produk {
     id: number
@@ -29,6 +30,7 @@ interface Produk {
     tinggi: number | null
     deskripsi: string | null
     image_url: string | null
+    images?: ProdukImage[]
 }
 
 type ViewMode = 'sheet' | 'modal'
@@ -79,6 +81,10 @@ const columns = [
     { key: 'dimensi', label: 'Dimensions', sortable: false },
 ]
 
+// Image files state (separate from form untuk handle File objects)
+const selectedImageFiles = ref<File[]>([])
+const imageUploadRef = ref<InstanceType<typeof MultiImageUpload> | null>(null)
+
 const form = useForm({
     nama_produk: '',
     kategori_id: null as number | null,
@@ -91,7 +97,6 @@ const form = useForm({
     lebar: null as number | null,
     tinggi: null as number | null,
     deskripsi: '',
-    image_url: '',
 })
 
 const brandOptions = computed<SelectOption[]>(() =>
@@ -114,6 +119,8 @@ function openCreateForm() {
     selectedProduk.value = null
     form.reset()
     form.clearErrors()
+    selectedImageFiles.value = []
+    imageUploadRef.value?.clearAllPreviews()
     showForm.value = true
 }
 
@@ -130,7 +137,7 @@ function openEditForm(produk: Produk) {
     form.lebar = produk.lebar
     form.tinggi = produk.tinggi
     form.deskripsi = produk.deskripsi || ''
-    form.image_url = produk.image_url || ''
+    selectedImageFiles.value = []
     showForm.value = true
 }
 
@@ -156,19 +163,53 @@ function handleRowClick(produk: Produk) {
 }
 
 function submitForm() {
+    // Prepare form data with files
+    const formData = new FormData()
+    
+    // Append form fields
+    Object.keys(form.data()).forEach(key => {
+        const value = form.data()[key]
+        if (value !== null && value !== undefined && value !== '') {
+            formData.append(key, value)
+        }
+    })
+    
+    // Append image files
+    selectedImageFiles.value.forEach((file, index) => {
+        formData.append(`images[${index}]`, file)
+    })
+    
+    // Debug: Log FormData contents
+    console.log('Submitting form with files:', selectedImageFiles.value.length)
+    for (let [key, value] of formData.entries()) {
+        console.log(`FormData: ${key} =`, value instanceof File ? `File(${value.name})` : value)
+    }
+    
     if (selectedProduk.value) {
-        form.put(`/app/admin/master-data/produk/${selectedProduk.value.id}`, {
+        // For update with files, use router.post (NOT form.post)
+        router.post(`/app/admin/master-data/produk/${selectedProduk.value.id}`, formData, {
             onSuccess: () => {
                 showForm.value = false
                 form.reset()
+                selectedImageFiles.value = []
+                imageUploadRef.value?.clearAllPreviews()
             },
+            onError: (errors) => {
+                console.error('Update error:', errors)
+            }
         })
     } else {
-        form.post('/app/admin/master-data/produk', {
+        // For create with files, use router.post (NOT form.post)
+        router.post('/app/admin/master-data/produk', formData, {
             onSuccess: () => {
                 showForm.value = false
                 form.reset()
+                selectedImageFiles.value = []
+                imageUploadRef.value?.clearAllPreviews()
             },
+            onError: (errors) => {
+                console.error('Create error:', errors)
+            }
         })
     }
 }
@@ -239,8 +280,8 @@ function toggleViewMode(mode: ViewMode) {
                     <template #cell:image_url="{ row }">
                         <div class="h-10 w-10 rounded-md overflow-hidden bg-muted">
                             <img
-                                v-if="row.original.image_url"
-                                :src="row.original.image_url"
+                                v-if="row.images && row.images.length > 0"
+                                :src="row.images.find((img: any) => img.is_primary)?.url || row.images[0]?.url"
                                 class="h-full w-full object-cover"
                             />
                             <div v-else class="flex h-full w-full items-center justify-center">
@@ -250,25 +291,25 @@ function toggleViewMode(mode: ViewMode) {
                     </template>
                     
                     <template #cell:brand="{ row }">
-                        <Badge v-if="row.original.brand" variant="secondary">
-                            {{ row.original.brand.nama_brand }}
+                        <Badge v-if="row.brand" variant="secondary">
+                            {{ row.brand.nama_brand }}
                         </Badge>
                         <span v-else class="text-muted-foreground">-</span>
                     </template>
                     
                     <template #cell:kategori="{ row }">
-                        <Badge v-if="row.original.kategori" variant="info">
-                            {{ row.original.kategori.nama_kategori }}
+                        <Badge v-if="row.kategori" variant="info">
+                            {{ row.kategori.nama_kategori }}
                         </Badge>
                         <span v-else class="text-muted-foreground">-</span>
                     </template>
                     
                     <template #cell:berat="{ row }">
-                        {{ row.original.berat ? row.original.berat + ' gram' : '-' }}
+                        {{ row.berat ? row.berat + ' gram' : '-' }}
                     </template>
                     
                     <template #cell:dimensi="{ row }">
-                        {{ formatDimensi(row.original.panjang, row.original.lebar, row.original.tinggi) }}
+                        {{ formatDimensi(row.panjang, row.lebar, row.tinggi) }}
                     </template>
                 </DataTable>
             </Card>
@@ -390,8 +431,14 @@ function toggleViewMode(mode: ViewMode) {
                             ></textarea>
                         </FormField>
                         
-                        <FormField label="Image URL" name="image_url">
-                            <Input v-model="form.image_url" placeholder="https://..." />
+                        <FormField label="Product Images" name="images">
+                            <MultiImageUpload
+                                ref="imageUploadRef"
+                                v-model="selectedImageFiles"
+                                :produk-id="selectedProduk?.id"
+                                :existing-images="selectedProduk?.images || []"
+                                :max-images="10"
+                            />
                         </FormField>
                     </form>
                     
@@ -407,6 +454,9 @@ function toggleViewMode(mode: ViewMode) {
                 </div>
             </SheetContent>
         </Sheet>
+        
+        <!-- NOTE: set-primary, delete, reorder operations removed -->
+        <!-- These operations now handled via full form submission only -->
         
         <!-- Modal/Dialog Mode -->
         <Dialog v-else :open="showForm" @update:open="showForm = $event" class="max-w-2xl max-h-[90vh]">
@@ -531,8 +581,14 @@ function toggleViewMode(mode: ViewMode) {
                         ></textarea>
                     </FormField>
                     
-                    <FormField label="Image URL" name="image_url">
-                        <Input v-model="form.image_url" placeholder="https://..." />
+                    <FormField label="Product Images" name="images">
+                        <MultiImageUpload
+                            ref="imageUploadRef"
+                            v-model="selectedImageFiles"
+                            :produk-id="selectedProduk?.id"
+                            :existing-images="selectedProduk?.images || []"
+                            :max-images="10"
+                        />
                     </FormField>
                 </form>
                 

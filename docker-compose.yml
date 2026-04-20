@@ -17,6 +17,7 @@ services:
       - arabica-network
     depends_on:
       - db
+      - redis
 
   # Service Web Server (Nginx)
   web:
@@ -53,6 +54,19 @@ services:
     networks:
       - arabica-network
 
+  # Service Redis
+  redis:
+    image: redis:7-alpine
+    container_name: arabica-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"  # Expose untuk akses dari host
+    volumes:
+      - redisdata:/data
+    networks:
+      - arabica-network
+    command: redis-server --appendonly yes  # Persist data
+
   # Service Queue Worker
   queue:
     build:
@@ -62,7 +76,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     # Perintah ini yang menjalankan worker secara terus menerus
-    command: php artisan queue:work --verbose --tries=3 --timeout=90
+    command: php artisan queue:work redis --queue=images --verbose --tries=3 --timeout=90
     volumes:
       - ./:/var/www
     extra_hosts:
@@ -72,6 +86,7 @@ services:
     depends_on:
       - app
       - db
+      - redis
 
 networks:
   arabica-network:
@@ -79,4 +94,6 @@ networks:
 
 volumes:
   dbdata:
+    driver: local
+  redisdata:
     driver: local

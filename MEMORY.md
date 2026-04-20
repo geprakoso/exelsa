@@ -131,6 +131,70 @@ resolve: (name) => {
 3. **Fix storage permissions** - `/var/www/storage` owned by wrong user in container
 4. **Add real-time features** - Laravel Echo setup
 
+---
+
+## 🖼️ Image Upload Feature - ✅ COMPLETED
+
+**Status:** ALL PHASES COMPLETE ✅  
+**Detailed Log:** `memory/2026-04-19-image-upload-COMPLETE.md`
+
+### ✅ Phase 1: SETUP
+- Docker + Redis service
+- `@formkit/drag-and-drop` installed
+- Migration `produk_images` table
+
+### ✅ Phase 2: BACKEND
+**Files:**
+- `app/Models/ProdukImage.php`
+- `app/Services/ImageUploadService.php`
+- `app/Jobs/ProcessProductImage.php`
+- `app/Http/Controllers/Api/ProdukImageController.php`
+- `routes/api.php`
+
+**API Endpoints:**
+```
+GET    /api/produk/{produk}/images
+POST   /api/produk/{produk}/images
+DELETE /api/produk/images/{image}
+POST   /api/produk/images/{image}/primary
+POST   /api/produk/{produk}/images/reorder
+```
+
+### ✅ Phase 3: FRONTEND
+- `resources/js/components/ui/MultiImageUpload.vue` ✅
+- Features: Drag-drop, sort, primary, delete, progress
+
+### ✅ Phase 4: INTEGRATION
+- Integrated to `produk/Index.vue`
+- Form handles multipart/form-data
+- DataTable displays primary image
+
+### 🚀 Action Required (Local)
+```bash
+# Restart Docker
+sudo docker-compose down && sudo docker-compose up -d
+
+# Install & Migrate
+sudo docker-compose exec app composer require intervention/image-laravel
+sudo docker-compose exec app php artisan migrate
+
+# Verify
+sudo docker-compose exec redis redis-cli ping  # PONG
+sudo docker-compose logs -f queue
+```
+
+### 📋 Specifications Met
+- ✅ WebP 85% quality
+- ✅ Max 10 images per produk, 5MB each
+- ✅ Redis queue with retry
+- ✅ Drag-drop & sort (with Counter Method fix)
+- ✅ Cloud-ready (R2/S3)
+
+### 🐛 Bug Fixes Applied
+- **Drag Flickering Fix:** Using Counter Method instead of boolean for stable drag detection
+- **Method Not Allowed Fix:** Route updated to accept both PUT and POST for file uploads
+- **Images Not Listed Fix:** Sync processing for local dev + real-time polling
+
 ## Docker
 - Containers: arabica-app, arabica-nginx, arabica-db
 - Storage broken in container (owner issue)

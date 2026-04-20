@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { ref, computed, onMounted, watch, h } from 'vue'
+import { ref, computed, onMounted, watch, h, useSlots, renderSlot } from 'vue'
 import {
     useVueTable,
     createColumnHelper,
@@ -75,6 +75,7 @@ const pagination = ref<PaginationState>({
 })
 const rowSelection = ref<Record<string, boolean>>({})
 
+const slots = useSlots()
 const columnHelper = createColumnHelper<T>()
 
 const tableColumns = computed<ColumnDef<T, any>[]>(() => {
@@ -124,6 +125,20 @@ const tableColumns = computed<ColumnDef<T, any>[]>(() => {
             },
             cell: ({ row }) => {
                 const value = row.getValue(col.key)
+                const slotName = `cell:${col.key}`
+                // Check if parent provided a custom cell slot
+                if (slots[slotName]) {
+                    // Pass row data and value to slot - use row.original for raw data access
+                    const rowData = row.original || row
+                    const slotProps = { row: rowData, value, original: row.original }
+                    const slotContent = slots[slotName](slotProps)
+                    // Return a wrapper div with the slot content
+                    return h('div', {}, slotContent)
+                }
+                // Handle object values - extract common name properties
+                if (value && typeof value === 'object') {
+                    return value.nama_brand || value.nama_kategori || value.name || JSON.stringify(value)
+                }
                 return value
             },
             enableSorting: col.sortable,

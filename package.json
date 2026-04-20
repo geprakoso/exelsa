@@ -11,6 +11,7 @@
         "inertia:dev": "vite"
     },
     "dependencies": {
+        "@formkit/drag-and-drop": "^0.5.3",
         "@inertiajs/core": "^1.2.0",
         "@inertiajs/vue3": "^1.2.0",
         "@tanstack/vue-form": "^1.0.0",

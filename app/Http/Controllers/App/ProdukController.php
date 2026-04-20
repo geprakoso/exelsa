@@ -6,11 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Kategori;
 use App\Models\Produk;
-use App\Models\Supplier;
-use App\Models\Member;
-use App\Models\Jasa;
-use App\Models\Gudang;
-use App\Models\AkunTransaksi;
+use App\Services\ImageUploadService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,7 +14,10 @@ class ProdukController extends Controller
 {
     public function index()
     {
-        $produks = Produk::with(['brand', 'kategori'])->paginate(15);
+        $produks = Produk::with(['brand', 'kategori', 'images' => function ($query) {
+            $query->ordered();
+        }])->paginate(15);
+        
         $brands = Brand::all();
         $kategoris = Kategori::all();
 
@@ -29,7 +28,7 @@ class ProdukController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ImageUploadService $uploadService)
     {
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
@@ -43,19 +42,23 @@ class ProdukController extends Controller
             'lebar' => 'nullable|numeric|min:0',
             'tinggi' => 'nullable|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'image_url' => 'nullable|string',
         ]);
 
         if (empty($validated['sku'])) {
             $validated['sku'] = Produk::generateDefaultSku();
         }
 
-        Produk::create($validated);
+        $produk = Produk::create($validated);
 
-        return redirect()->back()->with('success', 'Product created successfully');
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            $uploadService->uploadMultiple($request->file('images'), $produk->id);
+        }
+
+        return redirect()->route('app.produk')->with('success', 'Produk berhasil dibuat');
     }
 
-    public function update(Request $request, Produk $produk)
+    public function update(Request $request, Produk $produk, ImageUploadService $uploadService)
     {
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
@@ -69,12 +72,22 @@ class ProdukController extends Controller
             'lebar' => 'nullable|numeric|min:0',
             'tinggi' => 'nullable|numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'image_url' => 'nullable|string',
         ]);
 
         $produk->update($validated);
 
-        return redirect()->back()->with('success', 'Product updated successfully');
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            $currentCount = $produk->images()->count();
+            $maxUpload = 10 - $currentCount;
+            
+            if ($maxUpload > 0) {
+                $files = array_slice($request->file('images'), 0, $maxUpload);
+                $uploadService->uploadMultiple($files, $produk->id);
+            }
+        }
+
+        return redirect()->route('app.produk')->with('success', 'Product updated successfully');
     }
 
     public function destroy(Produk $produk)
