@@ -31,7 +31,7 @@ class Member extends Model
     protected static function booted(): void
     {
         static::creating(function (Member $member): void {
-            $member->kode_member ??= self::generateKode($member->nama_member ?? 'MEM', $member->created_at);
+            $member->kode_member ??= self::generateKode($member->nama_member ?? 'MEM', $member->created_at ?? now());
         });
     }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, type HTMLAttributes } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed, type HTMLAttributes } from 'vue'
 import { X } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import Button from './button.vue'
@@ -17,6 +17,14 @@ const isOpen = ref(props.open ?? false)
 
 watch(() => props.open, (val) => {
     isOpen.value = val ?? false
+})
+
+// Extract z-index class from props.class
+const zIndexClass = computed(() => {
+    if (!props.class) return 'z-50'
+    // Match z-[number] or z-10, z-20, etc.
+    const match = props.class.match(/z-\[(\d+)\]|z-\d+/)
+    return match ? match[0] : 'z-50'
 })
 
 function close() {
@@ -47,7 +55,12 @@ onUnmounted(() => {
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
         >
-            <div v-if="isOpen" class="fixed inset-0 z-50 bg-black/80" @click="close" />
+            <div 
+                v-if="isOpen" 
+                class="fixed inset-0 bg-black/80" 
+                :class="zIndexClass"
+                @click="close" 
+            />
         </Transition>
         <Transition
             enter-active-class="transition duration-200 ease-out"
@@ -57,10 +70,14 @@ onUnmounted(() => {
             leave-from-class="opacity-100 scale-100"
             leave-to-class="opacity-0 scale-95"
         >
-            <div v-if="isOpen" :class="cn(
-                'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-lg sm:rounded-lg',
-                props.class
-            )">
+            <div 
+                v-if="isOpen" 
+                :class="cn(
+                    'fixed left-1/2 top-1/2 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-lg sm:rounded-lg',
+                    zIndexClass,
+                    props.class
+                )"
+            >
                 <slot />
                 <Button
                     variant="ghost"

@@ -21,10 +21,10 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_supplier' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'no_hp' => 'required|string|max:20',
-            'alamat' => 'nullable|string',
+            'nama_supplier' => 'required|string|max:255|unique:md_suppliers,nama_supplier',
+            'email' => 'nullable|email|max:255|unique:md_suppliers,email',
+            'no_hp' => 'required|string|max:20|unique:md_suppliers,no_hp',
+            'alamat' => 'nullable|string|max:500',
             'provinsi' => 'nullable|string|max:100',
             'kota' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',
@@ -37,10 +37,10 @@ class SupplierController extends Controller
     public function update(Request $request, Supplier $supplier)
     {
         $validated = $request->validate([
-            'nama_supplier' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'no_hp' => 'required|string|max:20',
-            'alamat' => 'nullable|string',
+            'nama_supplier' => 'required|string|max:255|unique:md_suppliers,nama_supplier,' . $supplier->id,
+            'email' => 'nullable|email|max:255|unique:md_suppliers,email,' . $supplier->id,
+            'no_hp' => 'required|string|max:20|unique:md_suppliers,no_hp,' . $supplier->id,
+            'alamat' => 'nullable|string|max:500',
             'provinsi' => 'nullable|string|max:100',
             'kota' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',

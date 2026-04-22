@@ -24,15 +24,15 @@ class MemberController extends Controller
         $validated = $request->validate([
             'nama_member' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
-            'no_hp' => 'required|string|max:20',
-            'alamat' => 'nullable|string',
+            'no_hp' => 'required|string|max:20|unique:md_members,no_hp',
+            'alamat' => 'nullable|string|max:500',
             'provinsi' => 'nullable|string|max:100',
             'kota' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',
             'image_url' => 'nullable|string|max:500',
         ]);
 
-        $validated['kode_member'] = Member::generateKode($validated['nama_member']);
+        // Kode member akan digenerate otomatis oleh model
         Member::create($validated);
         return redirect()->back()->with('success', 'Member created successfully');
     }
@@ -42,8 +42,8 @@ class MemberController extends Controller
         $validated = $request->validate([
             'nama_member' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
-            'no_hp' => 'required|string|max:20',
-            'alamat' => 'nullable|string',
+            'no_hp' => 'required|string|max:20|unique:md_members,no_hp,' . $member->id,
+            'alamat' => 'nullable|string|max:500',
             'provinsi' => 'nullable|string|max:100',
             'kota' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',

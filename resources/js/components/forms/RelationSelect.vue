@@ -8,7 +8,8 @@ import {
   X,
   Loader2,
   Building2,
-  Tags
+  Tags,
+  Plus
 } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +31,8 @@ interface Props {
   clearable?: boolean
   icon?: 'building' | 'tag' | null
   class?: string
+  enableCreate?: boolean
+  createLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -37,12 +40,15 @@ const props = withDefaults(defineProps<Props>(), {
   searchPlaceholder: 'Search...',
   emptyMessage: 'No results found.',
   clearable: true,
-  icon: null
+  icon: null,
+  enableCreate: false,
+  createLabel: 'Create new'
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | number | null]
   'search': [query: string]
+  'create': [query: string]
 }>()
 
 // Refs
@@ -221,6 +227,12 @@ function scrollToActive() {
   })
 }
 
+function handleCreate() {
+  if (!searchQuery.value.trim()) return
+  emit('create', searchQuery.value.trim())
+  closeDropdown()
+}
+
 // Watch for external changes
 watch(() => props.modelValue, () => {
   searchQuery.value = ''
@@ -369,10 +381,21 @@ defineExpose({
           <!-- Empty State -->
           <div 
             v-else-if="filteredOptions.length === 0" 
-            class="flex flex-col items-center justify-center py-8 text-muted-foreground"
+            class="flex flex-col items-center justify-center py-6 text-muted-foreground"
           >
             <Search class="h-8 w-8 mb-2 opacity-50" />
             <span class="text-sm">{{ emptyMessage }}</span>
+            
+            <!-- Create New Option -->
+            <button
+              v-if="enableCreate && searchQuery.trim()"
+              type="button"
+              class="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-md transition-colors"
+              @click="handleCreate"
+            >
+              <Plus class="h-4 w-4" />
+              {{ createLabel }} "{{ searchQuery }}"
+            </button>
           </div>
           
           <!-- Options -->

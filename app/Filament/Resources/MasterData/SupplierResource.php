@@ -68,13 +68,13 @@ class SupplierResource extends BaseResource
 
                         // Section 1: Profil Supplier
                         Section::make('Profil Perusahaan')
-                            ->dehydrateStateUsing(fn($state) => Str::title($state))
                             ->description('Identitas utama supplier.')
                             ->icon('heroicon-m-building-storefront')
                             ->schema([
                                 Forms\Components\TextInput::make('nama_supplier')
                                     ->label('Nama Supplier / PT')
                                     ->required()
+                                    ->maxLength(255)
                                     ->placeholder('Masukan nama perusahaan')
                                     ->unique(ignoreRecord: true)
                                     ->columnSpanFull(),
@@ -83,11 +83,11 @@ class SupplierResource extends BaseResource
                         // Section 2: Alamat (Kita buat lebar agar leluasa)
                         Section::make('Alamat Lengkap')
                             ->icon('heroicon-m-map')
-                            ->dehydrateStateUsing(fn($state) => Str::title($state))
                             ->schema([
                                 Forms\Components\Textarea::make('alamat')
                                     ->label('Jalan / Gedung')
                                     ->rows(4)
+                                    ->maxLength(500)
                                     ->placeholder('Masukan alamat lengkap...')
                                     ->columnSpanFull(),
                             ]),
@@ -106,19 +106,20 @@ class SupplierResource extends BaseResource
                                     ->label('No. Handphone / WA')
                                     ->tel()
                                     ->required()
+                                    ->maxLength(20)
                                     ->unique(ignoreRecord: true)
                                     ->placeholder('08xxxxxxxxxx'),
 
                                 Forms\Components\TextInput::make('email')
                                     ->label('Email Kantor')
                                     ->email()
+                                    ->maxLength(255)
                                     ->unique(ignoreRecord: true)
                                     ->placeholder('email@perusahaan.com'),
                             ]),
 
                         // Section 4: Detail Wilayah
                         Section::make('Area Wilayah')
-                            ->dehydrateStateUsing(fn($state) => Str::title($state))
                             ->schema([
                                 Forms\Components\Select::make('provinsi')
                                     ->label('Provinsi')

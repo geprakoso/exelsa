@@ -82,6 +82,7 @@ class MemberResource extends BaseResource
                                     ->label('Nama Lengkap')
                                     ->dehydrateStateUsing(fn ($state) => Str::title($state))
                                     ->required()
+                                    ->maxLength(255)
                                     ->placeholder('Masukan nama lengkap')
                                     ->columnSpanFull(), // Agar nama terlihat dominan
 
@@ -91,6 +92,7 @@ class MemberResource extends BaseResource
                                             ->label('Nomor WhatsApp / HP')
                                             ->tel()
                                             ->required()
+                                            ->maxLength(20)
                                             ->prefix('+62')
                                             ->unique(ignoreRecord: true)
                                             ->placeholder('823-0000-0000'),
@@ -98,6 +100,7 @@ class MemberResource extends BaseResource
                                         TextInput::make('email')
                                             ->label('Alamat Email')
                                             ->email()
+                                            ->maxLength(255)
                                             ->placeholder('nama@email.com')
                                             ->nullable(),
                                     ]),
@@ -111,6 +114,7 @@ class MemberResource extends BaseResource
                                     ->label('Alamat Lengkap')
                                     ->dehydrateStateUsing(fn ($state) => Str::title($state))
                                     ->rows(3)
+                                    ->maxLength(500)
                                     ->placeholder('Nama jalan, nomor rumah, RT/RW...')
                                     ->columnSpanFull(),
 

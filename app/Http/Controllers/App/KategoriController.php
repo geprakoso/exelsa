@@ -21,11 +21,21 @@ class KategoriController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_kategori' => 'required|string|max:255',
+            'nama_kategori' => 'required|string|max:255|unique:md_kategori,nama_kategori',
             'is_active' => 'boolean',
         ]);
 
-        Kategori::create($validated);
+        $kategori = Kategori::create($validated);
+
+        // Return JSON for AJAX requests (from produk form)
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'id' => $kategori->id,
+                'nama_kategori' => $kategori->nama_kategori,
+                'message' => 'Category created successfully',
+            ], 201);
+        }
+
         return redirect()->back()->with('success', 'Kategori created successfully');
     }
 

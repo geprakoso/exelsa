@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ProdukImageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,5 +14,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// API routes removed - using Inertia form submission instead
-// All image operations now handled via ProdukController
+Route::middleware(['auth', 'web'])->group(function () {
+    // Produk Image API Routes
+    Route::get('/produk/{produk}/images', [ProdukImageController::class, 'index']);
+    Route::post('/produk/{produk}/images', [ProdukImageController::class, 'store']);
+    Route::post('/produk-images/{image}/primary', [ProdukImageController::class, 'setPrimary']);
+    Route::delete('/produk-images/{image}', [ProdukImageController::class, 'destroy']);
+    Route::post('/produk/{produk}/images/reorder', [ProdukImageController::class, 'reorder']);
+});

@@ -79,15 +79,24 @@ function handleFileSelect(e: Event) {
 
 function handleDragEnter(e: DragEvent) {
   e.preventDefault()
+  e.stopPropagation()
   dragCounter.value++
 }
 
 function handleDragLeave(e: DragEvent) {
   e.preventDefault()
+  e.stopPropagation()
   dragCounter.value--
 }
 
+function handleDragOver(e: DragEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+}
+
 function handleDrop(e: DragEvent) {
+  e.preventDefault()
+  e.stopPropagation()
   dragCounter.value = 0
   const files = Array.from(e.dataTransfer?.files || [])
   processFiles(files)
@@ -191,6 +200,19 @@ function formatSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
+// Handle clear all (both existing and new)
+function handleClearAll() {
+  if (!confirm('Yakin ingin menghapus semua gambar?')) return
+  
+  // Clear new previews
+  clearAllPreviews()
+  
+  // Delete all existing images
+  props.existingImages.forEach(img => {
+    emit('delete', img.id)
+  })
+}
+
 // Expose methods
 defineExpose({
   clearAllPreviews,
@@ -199,90 +221,131 @@ defineExpose({
 </script>
 
 <template>
-  <div class="space-y-6">
-    <!-- Upload Area -->
-    <div
-      v-if="canUpload"
-      class="relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 cursor-pointer"
-      :class="{
-        'border-primary bg-primary/5': isDragging,
-        'border-gray-300 hover:border-gray-400 hover:bg-gray-50/50': !isDragging
-      }"
-      @dragenter.prevent="handleDragEnter"
-      @dragleave.prevent="handleDragLeave"
-      @dragover.prevent
-      @drop.prevent="handleDrop"
-      @click="fileInputRef?.click()"
-    >
-      <input
-        ref="fileInputRef"
-        type="file"
-        multiple
-        accept="image/*"
-        class="hidden"
-        @change="handleFileSelect"
-      />
-      <div class="space-y-3">
-        <div 
-          class="mx-auto w-14 h-14 rounded-full flex items-center justify-center transition-colors"
-          :class="isDragging ? 'bg-primary text-white' : 'bg-muted'"
-        >
-          <Upload class="w-6 h-6" :class="isDragging ? 'text-white' : 'text-muted-foreground'" />
+  <div 
+    class="border rounded-xl overflow-hidden bg-card transition-all duration-200"
+    :class="isDragging ? 'border-primary ring-2 ring-primary/20' : 'border-border'"
+    @dragenter="handleDragEnter"
+    @dragleave="handleDragLeave"
+    @dragover="handleDragOver"
+    @drop="handleDrop"
+  >
+    <input
+      ref="fileInputRef"
+      type="file"
+      multiple
+      accept="image/*"
+      class="hidden"
+      @change="handleFileSelect"
+    />
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <ImageIcon class="w-4 h-4 text-primary" />
         </div>
-        
         <div>
-          <p class="text-sm font-medium">
-            {{ isDragging ? 'Lepaskan gambar di sini' : 'Drag & drop gambar di sini' }}
-          </p>
-          <p class="text-xs text-muted-foreground mt-1">
-            atau klik untuk memilih file
+          <h4 class="text-sm font-medium">Product Images</h4>
+          <p class="text-xs text-muted-foreground">
+            {{ totalImages }} of {{ maxImages }} images
           </p>
         </div>
-        
-        <div class="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <span class="px-2 py-0.5 bg-muted rounded">JPG</span>
-          <span class="px-2 py-0.5 bg-muted rounded">PNG</span>
-          <span class="px-2 py-0.5 bg-muted rounded">WEBP</span>
-        </div>
-        
-        <p class="text-xs text-muted-foreground">
-          Maks {{ maxImages }} gambar | 5MB per file | Tersedia: {{ availableSlots }} slot
-        </p>
-      </div>
-    </div>
-    
-    <!-- Max Images Reached -->
-    <div
-      v-else
-      class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center"
-    >
-      <div class="flex items-center justify-center gap-2 text-yellow-800">
-        <ImageIcon class="w-5 h-5" />
-        <p class="text-sm font-medium">
-          Maksimal {{ maxImages }} gambar telah tercapai
-        </p>
-      </div>
-    </div>
-    
-    <!-- New Images Preview -->
-    <div v-if="previews.length > 0" class="space-y-3">
-      <div class="flex items-center justify-between">
-        <h4 class="text-sm font-medium text-muted-foreground">
-          Gambar Baru ({{ previews.length }})
-        </h4>
-        <button
-          @click.stop="clearAllPreviews"
-          class="text-xs text-red-500 hover:text-red-600 hover:underline"
-        >
-          Hapus Semua
-        </button>
       </div>
       
-      <div class="grid grid-cols-5 gap-3">
+      <div class="flex items-center gap-2">
+        <!-- Counter Badge -->
+        <div 
+          class="px-2.5 py-1 rounded-full text-xs font-medium"
+          :class="totalImages >= maxImages 
+            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' 
+            : 'bg-muted text-muted-foreground'"
+        >
+          {{ totalImages }}/{{ maxImages }}
+        </div>
+        
+        <!-- Clear All Button -->
+        <button
+          v-if="totalImages > 0"
+          @click="handleClearAll"
+          class="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1 rounded-md transition-colors"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+    
+    <!-- Gallery Grid -->
+    <div class="p-4">
+      <div 
+        ref="parentRef"
+        class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"
+      >
+        <!-- Existing Images (Draggable) -->
+        <div
+          v-for="image in orderedImages"
+          :key="image.id"
+          class="group relative aspect-square rounded-lg overflow-hidden border bg-muted cursor-move transition-all duration-200 hover:shadow-md"
+          :class="{ 
+            'ring-2 ring-primary ring-offset-2 dark:ring-offset-card': image.is_primary,
+            'hover:border-primary/50': !image.is_primary 
+          }"
+        >
+          <img
+            :src="image.url"
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            :alt="image.original_name"
+          />
+          
+          <!-- Primary Badge -->
+          <div
+            v-if="image.is_primary"
+            class="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"
+          >
+            <Star class="w-3 h-3 fill-current" />
+            Primary
+          </div>
+          
+          <!-- Drag Handle -->
+          <div class="drag-handle absolute top-2 right-2 w-6 h-6 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-grab active:cursor-grabbing">
+            <GripVertical class="w-3.5 h-3.5" />
+          </div>
+          
+          <!-- Hover Overlay with Actions -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col justify-end p-2">
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-center gap-1.5 mb-1">
+              <!-- Set Primary -->
+              <button
+                v-if="!image.is_primary"
+                @click.stop="setPrimary(image.id)"
+                class="p-1.5 bg-white/90 hover:bg-yellow-400 hover:text-white rounded-md transition-all duration-150"
+                title="Set as primary"
+              >
+                <Star class="w-3.5 h-3.5 text-yellow-600" />
+              </button>
+              
+              <!-- Delete -->
+              <button
+                @click.stop="deleteImage(image.id)"
+                class="p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-md transition-all duration-150"
+                title="Delete"
+              >
+                <Trash2 class="w-3.5 h-3.5 text-red-600" />
+              </button>
+            </div>
+          </div>
+          
+          <!-- File Info (always visible at bottom) -->
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5">
+            <p class="text-white text-[9px] truncate opacity-90">{{ image.original_name }}</p>
+          </div>
+        </div>
+        
+        <!-- New Upload Previews -->
         <div
           v-for="(preview, index) in previews"
-          :key="index"
-          class="relative aspect-square rounded-lg overflow-hidden border group bg-muted"
+          :key="'new-'+index"
+          class="group relative aspect-square rounded-lg overflow-hidden border bg-muted"
         >
           <img 
             :src="preview.url" 
@@ -293,128 +356,105 @@ defineExpose({
           <!-- Progress Overlay -->
           <div
             v-if="preview.status === 'pending' || preview.progress < 100"
-            class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center"
+            class="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex flex-col items-center justify-center"
           >
-            <Loader2 v-if="preview.progress < 100" class="w-6 h-6 text-white animate-spin mb-1" />
-            <Check v-else class="w-6 h-6 text-green-400 mb-1" />
+            <Loader2 v-if="preview.progress < 100" class="w-5 h-5 text-white animate-spin mb-1.5" />
+            <Check v-else class="w-5 h-5 text-green-400 mb-1.5" />
             
-            <div class="w-16 bg-white/20 rounded-full h-1.5 overflow-hidden">
+            <div class="w-14 bg-white/20 rounded-full h-1 overflow-hidden">
               <div 
                 class="bg-primary h-full rounded-full transition-all duration-300"
                 :style="{ width: Math.min(preview.progress, 100) + '%' }"
               />
             </div>
-            <span class="text-white text-xs mt-1">{{ Math.round(preview.progress) }}%</span>
+            <span class="text-white text-[10px] mt-1 font-medium">{{ Math.round(preview.progress) }}%</span>
           </div>
           
-          <!-- Ready Badge -->
+          <!-- New Badge (when complete) -->
           <div
             v-else
-            class="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            class="absolute top-2 left-2 bg-green-500 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            Ready
+            New
           </div>
           
           <!-- Remove Button -->
           <button
             @click.stop="removePreview(index)"
-            class="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+            class="absolute top-2 right-2 w-6 h-6 bg-red-500/90 hover:bg-red-600 text-white rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center"
           >
             <X class="w-3.5 h-3.5" />
           </button>
           
           <!-- File Info -->
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <p class="text-white text-[10px] truncate">{{ preview.file.name }}</p>
-            <p class="text-white/70 text-[10px]">{{ formatSize(preview.file.size) }}</p>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <p class="text-white text-[9px] truncate">{{ preview.file.name }}</p>
+            <p class="text-white/70 text-[9px]">{{ formatSize(preview.file.size) }}</p>
           </div>
         </div>
-      </div>
-    </div>
-    
-    <!-- Existing Images (Draggable) -->
-    <div v-if="existingImages.length > 0" class="space-y-3">
-      <div class="flex items-center justify-between">
-        <h4 class="text-sm font-medium text-muted-foreground">
-          Gambar Tersimpan (drag untuk urutkan)
-        </h4>
-        <span class="text-xs text-muted-foreground">
-          {{ existingImages.length }} / {{ maxImages }}
-        </span>
+        
+        <!-- Upload Trigger Tile -->
+        <div
+          v-if="canUpload"
+          @click.stop="fileInputRef?.click()"
+          class="group aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 bg-muted/30 hover:bg-primary/5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-200"
+          :class="{ 'border-primary bg-primary/5': isDragging }"
+        >
+          <div 
+            class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+            :class="isDragging ? 'bg-primary text-white' : 'bg-muted group-hover:bg-primary/10'"
+          >
+            <Upload class="w-5 h-5" :class="isDragging ? 'text-white' : 'text-muted-foreground group-hover:text-primary'" />
+          </div>
+          <span class="text-[10px] text-muted-foreground group-hover:text-primary font-medium transition-colors">
+            {{ isDragging ? 'Drop here' : 'Select Image' }}
+          </span>
+        </div>
+        
+        <!-- Max Reached Indicator (optional slot filler) -->
+        <div
+          v-else-if="totalImages >= maxImages"
+          class="aspect-square rounded-lg border border-dashed border-muted-foreground/20 bg-muted/20 flex flex-col items-center justify-center gap-1.5"
+        >
+          <ImageIcon class="w-6 h-6 text-muted-foreground/40" />
+          <span class="text-[9px] text-muted-foreground/60 text-center px-2">Max reached</span>
+        </div>
       </div>
       
+      <!-- Empty State (Inside Box) -->
       <div
-        ref="parentRef"
-        class="grid grid-cols-5 gap-3"
+        v-if="totalImages === 0"
+        @click.stop="fileInputRef?.click()"
+        class="py-10 flex flex-col items-center justify-center cursor-pointer group"
       >
-        <div
-          v-for="image in orderedImages"
-          :key="image.id"
-          class="relative aspect-square rounded-lg overflow-hidden border group cursor-move bg-muted"
-          :class="{ 
-            'ring-2 ring-primary ring-offset-2': image.is_primary,
-            'hover:border-gray-400': !image.is_primary 
-          }"
-        >
-          <img
-            :src="image.url"
-            class="w-full h-full object-cover"
-            :alt="image.original_name"
-          />
-          
-          <!-- Primary Badge -->
-          <div
-            v-if="image.is_primary"
-            class="absolute top-2 left-2 bg-primary text-white text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1"
-          >
-            <Star class="w-3 h-3 fill-current" />
-            Utama
-          </div>
-          
-          <!-- Drag Handle -->
-          <div class="drag-handle absolute top-2 right-2 w-6 h-6 bg-black/50 text-white rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
-            <GripVertical class="w-4 h-4" />
-          </div>
-          
-          <!-- Actions Overlay -->
-          <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <!-- Set Primary -->
-            <button
-              v-if="!image.is_primary"
-              @click.stop="setPrimary(image.id)"
-              class="p-2 bg-white rounded-full hover:bg-yellow-50 transition-colors"
-              title="Jadikan utama"
-            >
-              <Star class="w-4 h-4 text-yellow-600" />
-            </button>
-            
-            <!-- Delete -->
-            <button
-              @click.stop="deleteImage(image.id)"
-              class="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-              title="Hapus"
-            >
-              <Trash2 class="w-4 h-4" />
-            </button>
-          </div>
-          
-          <!-- File Info -->
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-            <p class="text-white text-[10px] truncate">{{ image.original_name }}</p>
-            <p class="text-white/70 text-[10px]">{{ formatSize(image.size) }}</p>
-          </div>
+        <div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
+          <ImageIcon class="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
+        <p class="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+          No images yet
+        </p>
+        <p class="text-xs text-muted-foreground/70 mt-1">
+          Click or drag images here to upload
+        </p>
       </div>
     </div>
     
-    <!-- Empty State -->
-    <div
-      v-if="previews.length === 0 && existingImages.length === 0"
-      class="text-center py-8 text-muted-foreground"
-    >
-      <ImageIcon class="w-12 h-12 mx-auto mb-3 opacity-30" />
-      <p class="text-sm">Belum ada gambar</p>
-      <p class="text-xs mt-1">Upload gambar produk di atas</p>
+    <!-- Footer -->
+    <div class="px-4 py-2.5 border-t bg-muted/30 flex items-center justify-center gap-3 text-[11px] text-muted-foreground">
+      <span class="flex items-center gap-1">
+        <Upload class="w-3 h-3" />
+        Drop to upload
+      </span>
+      <span class="text-muted-foreground/30">•</span>
+      <span>Max {{ maxImages }} images</span>
+      <span class="text-muted-foreground/30">•</span>
+      <span>5MB each</span>
+      <span class="text-muted-foreground/30">•</span>
+      <span class="flex items-center gap-1">
+        <span class="px-1 py-0.px-1 bg-muted rounded text-[9px]">JPG</span>
+        <span class="px-1 py-0.px-1 bg-muted rounded text-[9px]">PNG</span>
+        <span class="px-1 py-0.px-1 bg-muted rounded text-[9px]">WEBP</span>
+      </span>
     </div>
   </div>
 </template>

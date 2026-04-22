@@ -24,7 +24,17 @@ class BrandController extends Controller
             'nama_brand' => 'required|string|max:255|unique:md_brand,nama_brand',
         ]);
 
-        Brand::create($validated);
+        $brand = Brand::create($validated);
+
+        // Return JSON for AJAX requests (from produk form)
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'id' => $brand->id,
+                'nama_brand' => $brand->nama_brand,
+                'message' => 'Brand created successfully',
+            ], 201);
+        }
+
         return redirect()->back()->with('success', 'Brand created successfully');
     }
 

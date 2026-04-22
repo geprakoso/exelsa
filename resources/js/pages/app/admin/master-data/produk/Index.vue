@@ -2,7 +2,15 @@
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePage, useForm, router } from '@inertiajs/vue3'
+import axios from 'axios'
 import { Plus, Search, Pencil, Trash2, Image, X, LayoutPanelLeft, Maximize2 } from 'lucide-vue-next'
+
+// Configure axios with CSRF token for web routes
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+if (token) {
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = token
+}
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
@@ -57,6 +65,12 @@ const searchQuery = ref('')
 // Load view mode from localStorage or default to 'sheet'
 const STORAGE_KEY = 'produk-form-view-mode'
 const viewMode = ref<ViewMode>('sheet')
+
+// Create Brand/Category Modal State
+const showCreateBrandModal = ref(false)
+const showCreateKategoriModal = ref(false)
+const newBrandName = ref('')
+const newKategoriName = ref('')
 
 // Load saved preference on mount
 onMounted(() => {
@@ -233,6 +247,167 @@ function formatDimensi(p: number | null, l: number | null, t: number | null): st
 function toggleViewMode(mode: ViewMode) {
     viewMode.value = mode
 }
+
+// Image Operations - Loading states to prevent race conditions
+const isImageOperationLoading = ref(false)
+
+async function handleSetPrimary(imageId: number) {
+    if (!selectedProduk.value || isImageOperationLoading.value) return
+
+    isImageOperationLoading.value = true
+    try {
+        await axios.post(`/api/produk-images/${imageId}/primary`)
+
+        // Update local state immediately for instant UI feedback
+        if (selectedProduk.value.images) {
+            selectedProduk.value.images = selectedProduk.value.images.map(img => ({
+                ...img,
+                is_primary: img.id === imageId
+            }))
+        }
+
+        // Refresh produk list in background (await to prevent race conditions)
+        await router.reload({ only: ['produks'], preserveState: true })
+    } catch (error) {
+        console.error('Failed to set primary image:', error)
+        alert('Failed to set primary image')
+    } finally {
+        isImageOperationLoading.value = false
+    }
+}
+
+async function handleDeleteImage(imageId: number) {
+    if (!confirm('Are you sure you want to delete this image?')) return
+    if (isImageOperationLoading.value) return
+
+    isImageOperationLoading.value = true
+    try {
+        await axios.delete(`/api/produk-images/${imageId}`)
+
+        // Update local state immediately for instant UI feedback
+        if (selectedProduk.value?.images) {
+            selectedProduk.value.images = selectedProduk.value.images.filter(img => img.id !== imageId)
+        }
+
+        // Refresh produk list in background (await to prevent race conditions)
+        await router.reload({ only: ['produks'], preserveState: true })
+    } catch (error) {
+        console.error('Failed to delete image:', error)
+        alert('Failed to delete image')
+    } finally {
+        isImageOperationLoading.value = false
+    }
+}
+
+async function handleReorder(imageIds: number[]) {
+    if (!selectedProduk.value || isImageOperationLoading.value) return
+
+    isImageOperationLoading.value = true
+    try {
+        await axios.post(`/api/produk/${selectedProduk.value.id}/images/reorder`, {
+            images: imageIds
+        })
+
+        // Update local state immediately for instant UI feedback
+        if (selectedProduk.value.images) {
+            const imageMap = new Map(selectedProduk.value.images.map(img => [img.id, img]))
+            selectedProduk.value.images = imageIds
+                .map(id => imageMap.get(id))
+                .filter((img): img is ProdukImage => img !== undefined)
+        }
+
+        // Refresh produk list in background (await to prevent race conditions)
+        await router.reload({ only: ['produks'], preserveState: true })
+    } catch (error) {
+        console.error('Failed to reorder images:', error)
+        alert('Failed to reorder images')
+    } finally {
+        isImageOperationLoading.value = false
+    }
+}
+
+// Create Brand/Kategori Handlers
+function openCreateBrandModal(name: string) {
+    newBrandName.value = name
+    showCreateBrandModal.value = true
+}
+
+function openCreateKategoriModal(name: string) {
+    newKategoriName.value = name
+    showCreateKategoriModal.value = true
+}
+
+function closeCreateBrandModal() {
+    showCreateBrandModal.value = false
+    newBrandName.value = ''
+}
+
+function closeCreateKategoriModal() {
+    showCreateKategoriModal.value = false
+    newKategoriName.value = ''
+}
+
+async function handleCreateBrand() {
+    if (!newBrandName.value.trim()) return
+
+    try {
+        // Use web route instead of API route
+        const response = await axios.post('/app/admin/master-data/brand', {
+            nama_brand: newBrandName.value.trim()
+        })
+
+        // Auto-select the newly created brand
+        form.brand_id = response.data.id
+
+        // Update local options immediately (optimistic UI)
+        const newBrand = {
+            label: newBrandName.value.trim(),
+            value: response.data.id,
+            description: undefined
+        }
+
+        // Close modal immediately for better UX
+        closeCreateBrandModal()
+
+        // Refresh in background to sync with server
+        router.reload({ only: ['brands'], preserveState: true })
+
+    } catch (error: any) {
+        console.error('Failed to create brand:', error)
+        alert(error.response?.data?.message || 'Failed to create brand')
+    }
+}
+
+async function handleCreateKategori() {
+    if (!newKategoriName.value.trim()) return
+
+    try {
+        // Use web route instead of API route
+        const response = await axios.post('/app/admin/master-data/kategori', {
+            nama_kategori: newKategoriName.value.trim()
+        })
+
+        // Auto-select the newly created kategori
+        form.kategori_id = response.data.id
+
+        // Update local options immediately (optimistic UI)
+        const newKategori = {
+            label: newKategoriName.value.trim(),
+            value: response.data.id,
+            description: undefined
+        }
+
+        // Close modal immediately for better UX
+        closeCreateKategoriModal()
+
+        // Refresh in background to sync with server
+        router.reload({ only: ['kategoris'], preserveState: true })
+
+    } catch (error: any) {
+        console.error('Failed to create kategori:', error)
+        alert(error.response?.data?.message || 'Failed to create category')
+    }
+}
 </script>
 
 <template>
@@ -379,6 +554,9 @@ function toggleViewMode(mode: ViewMode) {
                                     v-model="form.brand_id"
                                     :options="brandOptions"
                                     placeholder="Select brand"
+                                    :enable-create="true"
+                                    create-label="Create brand"
+                                    @create="openCreateBrandModal"
                                 />
                             </FormField>
                             
@@ -387,6 +565,9 @@ function toggleViewMode(mode: ViewMode) {
                                     v-model="form.kategori_id"
                                     :options="kategoriOptions"
                                     placeholder="Select category"
+                                    :enable-create="true"
+                                    create-label="Create category"
+                                    @create="openCreateKategoriModal"
                                 />
                             </FormField>
                         </div>
@@ -438,6 +619,9 @@ function toggleViewMode(mode: ViewMode) {
                                 :produk-id="selectedProduk?.id"
                                 :existing-images="selectedProduk?.images || []"
                                 :max-images="10"
+                                @set-primary="handleSetPrimary"
+                                @delete="handleDeleteImage"
+                                @reorder="handleReorder"
                             />
                         </FormField>
                     </form>
@@ -525,6 +709,9 @@ function toggleViewMode(mode: ViewMode) {
                                     empty-message="No brands found"
                                     icon="building"
                                     :clearable="true"
+                                    :enable-create="true"
+                                    create-label="Create brand"
+                                    @create="openCreateBrandModal"
                                 />
                             </FormField>
                             
@@ -537,6 +724,9 @@ function toggleViewMode(mode: ViewMode) {
                                     empty-message="No categories found"
                                     icon="tag"
                                     :clearable="true"
+                                    :enable-create="true"
+                                    create-label="Create category"
+                                    @create="openCreateKategoriModal"
                                 />
                             </FormField>
                         </div>
@@ -588,10 +778,13 @@ function toggleViewMode(mode: ViewMode) {
                             :produk-id="selectedProduk?.id"
                             :existing-images="selectedProduk?.images || []"
                             :max-images="10"
+                            @set-primary="handleSetPrimary"
+                            @delete="handleDeleteImage"
+                            @reorder="handleReorder"
                         />
                     </FormField>
                 </form>
-                
+
                 <!-- Footer Actions -->
                 <div class="flex justify-end gap-2 pt-4 border-t">
                     <Button type="button" variant="outline" @click="closeForm">
@@ -615,6 +808,38 @@ function toggleViewMode(mode: ViewMode) {
                     <Button variant="outline" @click="showDeleteModal = false">Cancel</Button>
                     <Button variant="destructive" @click="deleteProduk" :loading="form.processing">
                         Delete
+                    </Button>
+                </div>
+            </div>
+        </Dialog>
+        
+        <!-- Create Brand Modal - Higher z-index to appear above product modal -->
+        <Dialog :open="showCreateBrandModal" @update:open="showCreateBrandModal = $event" class="max-w-md z-[60]">
+            <div class="space-y-4">
+                <h2 class="text-lg font-semibold">Create New Brand</h2>
+                <p class="text-muted-foreground">
+                    Brand "<strong>{{ newBrandName }}</strong>" not found. Do you want to create it?
+                </p>
+                <div class="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" @click="closeCreateBrandModal">Cancel</Button>
+                    <Button @click="handleCreateBrand" :loading="form.processing">
+                        Create Brand
+                    </Button>
+                </div>
+            </div>
+        </Dialog>
+
+        <!-- Create Category Modal - Higher z-index to appear above product modal -->
+        <Dialog :open="showCreateKategoriModal" @update:open="showCreateKategoriModal = $event" class="max-w-md z-[60]">
+            <div class="space-y-4">
+                <h2 class="text-lg font-semibold">Create New Category</h2>
+                <p class="text-muted-foreground">
+                    Category "<strong>{{ newKategoriName }}</strong>" not found. Do you want to create it?
+                </p>
+                <div class="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" @click="closeCreateKategoriModal">Cancel</Button>
+                    <Button @click="handleCreateKategori" :loading="form.processing">
+                        Create Category
                     </Button>
                 </div>
             </div>
