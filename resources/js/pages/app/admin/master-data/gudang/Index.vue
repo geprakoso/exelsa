@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { ref } from 'vue'
-import { usePage, useForm } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { usePage, useForm, router } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Button from '@/components/ui/button.vue'
@@ -28,7 +28,7 @@ interface Gudang {
     is_active: boolean
 }
 
-const gudangList = ref<Gudang[]>(page.props.gudang || [])
+const gudangList = computed<Gudang[]>(() => page.props.gudang as Gudang[] || [])
 const isLoading = ref(false)
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)

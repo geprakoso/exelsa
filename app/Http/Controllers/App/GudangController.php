@@ -33,6 +33,9 @@ class GudangController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // Filter out null values to allow database defaults to be used
+        $validated = array_filter($validated, fn ($value) => $value !== null);
+
         Gudang::create($validated);
         return redirect()->back()->with('success', 'Gudang created successfully');
     }
@@ -51,6 +54,9 @@ class GudangController extends Controller
             'radius_km' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
         ]);
+
+        // Filter out null values to allow database defaults to be used
+        $validated = array_filter($validated, fn ($value) => $value !== null);
 
         $gudang->update($validated);
         return redirect()->back()->with('success', 'Gudang updated successfully');
