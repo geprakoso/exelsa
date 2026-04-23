@@ -9,12 +9,23 @@ use Inertia\Inertia;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::with('agents')->get();
+        $suppliers = Supplier::query()
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('no_hp', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         return Inertia::render('app/admin/master-data/supplier/Index', [
             'suppliers' => $suppliers,
-            'user' => auth()->user(),
+            'filters' => $request->only(['search']),
         ]);
     }
 

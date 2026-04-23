@@ -10,12 +10,24 @@ use Illuminate\Support\Str;
 
 class MemberController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $members = Member::all();
+        $members = Member::query()
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_member', 'like', "%{$search}%")
+                        ->orWhere('kode_member', 'like', "%{$search}%")
+                        ->orWhere('no_hp', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         return Inertia::render('app/admin/master-data/member/Index', [
             'members' => $members,
-            'user' => auth()->user(),
+            'filters' => $request->only(['search']),
         ]);
     }
 

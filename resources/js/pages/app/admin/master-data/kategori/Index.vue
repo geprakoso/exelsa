@@ -22,27 +22,50 @@ interface Kategori {
     is_active: boolean
 }
 
-const isLoading = ref(false)
-const showCreateModal = ref(false)
-const showDeleteModal = ref(false)
-const selectedKategori = ref<Kategori | null>(null)
-const searchQuery = ref('')
+// Data dari props - client side untuk data kecil
+const kategoriList = computed<Kategori[]>(
+    () => (page.props.kategori as Kategori[]) || []
+)
 
-const kategoriList = computed(() => {
-    const list = (page.props.kategori as Kategori[]) || []
-    if (!searchQuery.value) return list
-    
-    return list.filter(kat => 
-        kat.nama_kategori.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        kat.kode.toLowerCase().includes(searchQuery.value.toLowerCase())
+// Search dengan debounce
+const searchQuery = ref('')
+const isSearching = ref(false)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+function handleSearchInput(value: string) {
+    searchQuery.value = value
+    isSearching.value = true
+
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+        isSearching.value = false
+    }, 300)
+}
+
+// Filtered categories - client side
+const filteredKategori = computed(() => {
+    const query = searchQuery.value.toLowerCase().trim()
+    if (!query) return kategoriList.value
+
+    return kategoriList.value.filter(
+        (kat) =>
+            kat.nama_kategori.toLowerCase().includes(query) ||
+            kat.kode.toLowerCase().includes(query)
     )
 })
 
-const pagination = ref({
-    current_page: 1,
-    last_page: 1,
-    per_page: 15,
-    total: 0,
+// Loading states
+const isLoading = computed(() => isSearching.value)
+const isDeleting = ref(false)
+
+// Modal states
+const showFormModal = ref(false)
+const showDeleteModal = ref(false)
+const selectedKategori = ref<Kategori | null>(null)
+
+const form = useForm({
+    nama_kategori: '',
+    is_active: true,
 })
 
 const columns = [
@@ -51,23 +74,18 @@ const columns = [
     { key: 'is_active', label: 'Status', sortable: true },
 ]
 
-const form = useForm({
-    nama_kategori: '',
-    is_active: true,
-})
-
 function openCreateModal() {
     selectedKategori.value = null
     form.reset()
     form.clearErrors()
-    showCreateModal.value = true
+    showFormModal.value = true
 }
 
 function openEditModal(kategori: Kategori) {
     selectedKategori.value = kategori
     form.nama_kategori = kategori.nama_kategori
     form.is_active = kategori.is_active
-    showCreateModal.value = true
+    showFormModal.value = true
 }
 
 function openDeleteModal(kategori: Kategori) {
@@ -75,10 +93,26 @@ function openDeleteModal(kategori: Kategori) {
     showDeleteModal.value = true
 }
 
-function handleSort(field: string, direction: 'asc' | 'desc') {}
-function handlePageChange(page: number) {
-    pagination.value.current_page = page
+function closeFormModal() {
+    showFormModal.value = false
+    selectedKategori.value = null
+    form.reset()
+    form.clearErrors()
 }
+
+function closeDeleteModal() {
+    showDeleteModal.value = false
+    selectedKategori.value = null
+}
+
+function handleSort(field: string, direction: 'asc' | 'desc') {
+    console.log('Sort:', field, direction)
+}
+
+function handlePageChange(page: number) {
+    console.log('Page:', page)
+}
+
 function handleRowClick(kategori: Kategori) {
     openEditModal(kategori)
 }
@@ -87,29 +121,31 @@ function submitForm() {
     if (selectedKategori.value) {
         form.put(`/app/admin/master-data/kategori/${selectedKategori.value.id}`, {
             onSuccess: () => {
-                showCreateModal.value = false
-                form.reset()
+                closeFormModal()
             },
         })
     } else {
         form.post('/app/admin/master-data/kategori', {
             onSuccess: () => {
-                showCreateModal.value = false
-                form.reset()
+                closeFormModal()
             },
         })
     }
 }
 
 function deleteKategori() {
-    if (selectedKategori.value) {
-        form.delete(`/app/admin/master-data/kategori/${selectedKategori.value.id}`, {
-            onSuccess: () => {
-                showDeleteModal.value = false
-                selectedKategori.value = null
-            },
-        })
-    }
+    if (!selectedKategori.value) return
+
+    isDeleting.value = true
+    form.delete(`/app/admin/master-data/kategori/${selectedKategori.value.id}`, {
+        onSuccess: () => {
+            closeDeleteModal()
+            isDeleting.value = false
+        },
+        onError: () => {
+            isDeleting.value = false
+        },
+    })
 }
 </script>
 
@@ -121,7 +157,7 @@ function deleteKategori() {
                 description="Manage your product categories."
                 :breadcrumbs="[
                     { label: 'Master Data', href: '/app/admin/master-data' },
-                    { label: 'Categories' }
+                    { label: 'Categories' },
                 ]"
             >
                 <template #actions>
@@ -131,19 +167,28 @@ function deleteKategori() {
                     </Button>
                 </template>
             </PageHeader>
-            
+
             <Card class="p-6">
                 <div class="flex items-center gap-4 mb-6">
                     <div class="relative flex-1 max-w-sm">
-                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input v-model="searchQuery" placeholder="Search categories..." class="pl-10" />
+                        <Search
+                            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <Input
+                            :model-value="searchQuery"
+                            @update:model-value="handleSearchInput"
+                            placeholder="Search categories..."
+                            class="pl-10"
+                        />
+                    </div>
+                    <div v-if="isSearching" class="text-sm text-muted-foreground">
+                        Searching...
                     </div>
                 </div>
-                
+
                 <DataTable
-                    :data="kategoriList"
+                    :data="filteredKategori"
                     :columns="columns"
-                    :pagination="pagination"
                     :loading="isLoading"
                     @sort="handleSort"
                     @page-change="handlePageChange"
@@ -156,32 +201,72 @@ function deleteKategori() {
                     </template>
                     <template #actions="{ row }">
                         <div class="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" @click.stop="openEditModal(row)">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                @click.stop="openEditModal(row)"
+                            >
                                 <Pencil class="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" @click.stop="openDeleteModal(row)">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                @click.stop="openDeleteModal(row)"
+                            >
                                 <Trash2 class="h-4 w-4 text-destructive" />
                             </Button>
                         </div>
                     </template>
                 </DataTable>
+
+                <div
+                    v-if="filteredKategori.length === 0 && !isLoading"
+                    class="text-center py-8 text-muted-foreground"
+                >
+                    No categories found
+                </div>
             </Card>
         </div>
-        
-        <Dialog :open="showCreateModal" @update:open="showCreateModal = $event" class="max-w-md">
+
+        <!-- Create/Edit Modal -->
+        <Dialog
+            :open="showFormModal"
+            @update:open="showFormModal = $event"
+            class="max-w-md"
+        >
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">
                     {{ selectedKategori ? 'Edit Category' : 'Create Category' }}
                 </h2>
-                
+
                 <form @submit.prevent="submitForm" class="space-y-4">
-                    <FormField label="Category Name" name="nama_kategori" required>
-                        <Input v-model="form.nama_kategori" placeholder="Enter category name" />
-                        <p v-if="form.errors.nama_kategori" class="text-sm text-red-500">{{ form.errors.nama_kategori }}</p>
+                    <FormField
+                        label="Category Name"
+                        name="nama_kategori"
+                        :error="form.errors.nama_kategori"
+                        required
+                    >
+                        <Input
+                            v-model="form.nama_kategori"
+                            :error="!!form.errors.nama_kategori"
+                            placeholder="Enter category name"
+                        />
                     </FormField>
-                    
+
+                    <div class="flex items-center gap-2">
+                        <input
+                            id="is_active"
+                            v-model="form.is_active"
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label for="is_active" class="text-sm">Active</label>
+                    </div>
+
                     <div class="flex justify-end gap-2 pt-4">
-                        <Button type="button" variant="outline" @click="showCreateModal = false">Cancel</Button>
+                        <Button type="button" variant="outline" @click="closeFormModal">
+                            Cancel
+                        </Button>
                         <Button type="submit" :loading="form.processing">
                             {{ selectedKategori ? 'Update' : 'Create' }}
                         </Button>
@@ -189,16 +274,30 @@ function deleteKategori() {
                 </form>
             </div>
         </Dialog>
-        
-        <Dialog :open="showDeleteModal" @update:open="showDeleteModal = $event" class="max-w-md">
+
+        <!-- Delete Modal -->
+        <Dialog
+            :open="showDeleteModal"
+            @update:open="showDeleteModal = $event"
+            class="max-w-md"
+        >
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">Delete Category</h2>
                 <p class="text-muted-foreground">
-                    Are you sure you want to delete <strong>{{ selectedKategori?.nama_kategori }}</strong>?
+                    Are you sure you want to delete
+                    <strong>{{ selectedKategori?.nama_kategori }}</strong>?
                 </p>
                 <div class="flex justify-end gap-2 pt-4">
-                    <Button variant="outline" @click="showDeleteModal = false">Cancel</Button>
-                    <Button variant="destructive" @click="deleteKategori" :loading="form.processing">Delete</Button>
+                    <Button variant="outline" @click="closeDeleteModal">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        @click="deleteKategori"
+                        :loading="isDeleting"
+                    >
+                        Delete
+                    </Button>
                 </div>
             </div>
         </Dialog>

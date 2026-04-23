@@ -12,12 +12,27 @@ use Inertia\Inertia;
 
 class ProdukController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $produks = Produk::with(['brand', 'kategori', 'images' => function ($query) {
             $query->ordered();
-        }])->paginate(15);
-        
+        }])
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->brand_id, function ($query, $brandId) {
+                $query->where('brand_id', $brandId);
+            })
+            ->when($request->kategori_id, function ($query, $kategoriId) {
+                $query->where('kategori_id', $kategoriId);
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         $brands = Brand::all();
         $kategoris = Kategori::all();
 
@@ -25,6 +40,7 @@ class ProdukController extends Controller
             'produks' => $produks,
             'brands' => $brands,
             'kategoris' => $kategoris,
+            'filters' => $request->only(['search', 'brand_id', 'kategori_id']),
         ]);
     }
 

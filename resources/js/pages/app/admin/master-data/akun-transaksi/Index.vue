@@ -25,27 +25,48 @@ interface AkunTransaksi {
     catatan: string | null
 }
 
-const akunList = computed<AkunTransaksi[]>(() => page.props.akunTransaksi as AkunTransaksi[] || [])
-const isLoading = ref(false)
-const showCreateModal = ref(false)
-const showDeleteModal = ref(false)
-const selectedAkun = ref<AkunTransaksi | null>(null)
-const searchQuery = ref('')
+// Data dari props - client side untuk data kecil
+const akunList = computed<AkunTransaksi[]>(
+    () => (page.props.akunTransaksi as AkunTransaksi[]) || []
+)
 
-const pagination = ref({
-    current_page: 1,
-    last_page: 1,
-    per_page: 15,
-    total: 0,
+// Search dengan debounce
+const searchQuery = ref('')
+const isSearching = ref(false)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+function handleSearchInput(value: string) {
+    searchQuery.value = value
+    isSearching.value = true
+
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+        isSearching.value = false
+    }, 300)
+}
+
+// Filtered akun - client side
+const filteredAkun = computed(() => {
+    const query = searchQuery.value.toLowerCase().trim()
+    if (!query) return akunList.value
+
+    return akunList.value.filter(
+        (a) =>
+            a.kode_akun.toLowerCase().includes(query) ||
+            a.nama_akun.toLowerCase().includes(query) ||
+            (a.nama_bank?.toLowerCase().includes(query) ?? false) ||
+            (a.no_rekening?.toLowerCase().includes(query) ?? false)
+    )
 })
 
-const columns = [
-    { key: 'kode_akun', label: 'Code', sortable: true },
-    { key: 'nama_akun', label: 'Account Name', sortable: true },
-    { key: 'nama_bank', label: 'Bank', sortable: false },
-    { key: 'no_rekening', label: 'Account No.', sortable: false },
-    { key: 'is_active', label: 'Status', sortable: true },
-]
+// Loading states
+const isLoading = computed(() => isSearching.value)
+const isDeleting = ref(false)
+
+// Modal states
+const showFormModal = ref(false)
+const showDeleteModal = ref(false)
+const selectedAkun = ref<AkunTransaksi | null>(null)
 
 const form = useForm({
     nama_akun: '',
@@ -56,11 +77,19 @@ const form = useForm({
     catatan: '',
 })
 
+const columns = [
+    { key: 'kode_akun', label: 'Code', sortable: true },
+    { key: 'nama_akun', label: 'Account Name', sortable: true },
+    { key: 'nama_bank', label: 'Bank', sortable: false },
+    { key: 'no_rekening', label: 'Account No.', sortable: false },
+    { key: 'is_active', label: 'Status', sortable: true },
+]
+
 function openCreateModal() {
     selectedAkun.value = null
     form.reset()
     form.clearErrors()
-    showCreateModal.value = true
+    showFormModal.value = true
 }
 
 function openEditModal(akun: AkunTransaksi) {
@@ -71,7 +100,7 @@ function openEditModal(akun: AkunTransaksi) {
     form.no_rekening = akun.no_rekening || ''
     form.is_active = akun.is_active
     form.catatan = akun.catatan || ''
-    showCreateModal.value = true
+    showFormModal.value = true
 }
 
 function openDeleteModal(akun: AkunTransaksi) {
@@ -79,10 +108,26 @@ function openDeleteModal(akun: AkunTransaksi) {
     showDeleteModal.value = true
 }
 
-function handleSort(field: string, direction: 'asc' | 'desc') {}
-function handlePageChange(page: number) {
-    pagination.value.current_page = page
+function closeFormModal() {
+    showFormModal.value = false
+    selectedAkun.value = null
+    form.reset()
+    form.clearErrors()
 }
+
+function closeDeleteModal() {
+    showDeleteModal.value = false
+    selectedAkun.value = null
+}
+
+function handleSort(field: string, direction: 'asc' | 'desc') {
+    console.log('Sort:', field, direction)
+}
+
+function handlePageChange(page: number) {
+    console.log('Page:', page)
+}
+
 function handleRowClick(akun: AkunTransaksi) {
     openEditModal(akun)
 }
@@ -91,29 +136,31 @@ function submitForm() {
     if (selectedAkun.value) {
         form.put(`/app/admin/master-data/akun-transaksi/${selectedAkun.value.id}`, {
             onSuccess: () => {
-                showCreateModal.value = false
-                form.reset()
+                closeFormModal()
             },
         })
     } else {
         form.post('/app/admin/master-data/akun-transaksi', {
             onSuccess: () => {
-                showCreateModal.value = false
-                form.reset()
+                closeFormModal()
             },
         })
     }
 }
 
 function deleteAkun() {
-    if (selectedAkun.value) {
-        form.delete(`/app/admin/master-data/akun-transaksi/${selectedAkun.value.id}`, {
-            onSuccess: () => {
-                showDeleteModal.value = false
-                selectedAkun.value = null
-            },
-        })
-    }
+    if (!selectedAkun.value) return
+
+    isDeleting.value = true
+    form.delete(`/app/admin/master-data/akun-transaksi/${selectedAkun.value.id}`, {
+        onSuccess: () => {
+            closeDeleteModal()
+            isDeleting.value = false
+        },
+        onError: () => {
+            isDeleting.value = false
+        },
+    })
 }
 </script>
 
@@ -125,7 +172,7 @@ function deleteAkun() {
                 description="Manage your chart of accounts for transactions."
                 :breadcrumbs="[
                     { label: 'Master Data', href: '/app/admin/master-data' },
-                    { label: 'Transaction Accounts' }
+                    { label: 'Transaction Accounts' },
                 ]"
             >
                 <template #actions>
@@ -135,19 +182,28 @@ function deleteAkun() {
                     </Button>
                 </template>
             </PageHeader>
-            
+
             <Card class="p-6">
                 <div class="flex items-center gap-4 mb-6">
                     <div class="relative flex-1 max-w-sm">
-                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input v-model="searchQuery" placeholder="Search accounts..." class="pl-10" />
+                        <Search
+                            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <Input
+                            :model-value="searchQuery"
+                            @update:model-value="handleSearchInput"
+                            placeholder="Search accounts..."
+                            class="pl-10"
+                        />
+                    </div>
+                    <div v-if="isSearching" class="text-sm text-muted-foreground">
+                        Searching...
                     </div>
                 </div>
-                
+
                 <DataTable
-                    :data="akunList"
+                    :data="filteredAkun"
                     :columns="columns"
-                    :pagination="pagination"
                     :loading="isLoading"
                     @sort="handleSort"
                     @page-change="handlePageChange"
@@ -160,49 +216,101 @@ function deleteAkun() {
                     </template>
                     <template #actions="{ row }">
                         <div class="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" @click.stop="openEditModal(row)">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                @click.stop="openEditModal(row)"
+                            >
                                 <Pencil class="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" @click.stop="openDeleteModal(row)">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                @click.stop="openDeleteModal(row)"
+                            >
                                 <Trash2 class="h-4 w-4 text-destructive" />
                             </Button>
                         </div>
                     </template>
                 </DataTable>
+
+                <div
+                    v-if="filteredAkun.length === 0 && !isLoading"
+                    class="text-center py-8 text-muted-foreground"
+                >
+                    No accounts found
+                </div>
             </Card>
         </div>
-        
-        <Dialog :open="showCreateModal" @update:open="showCreateModal = $event" class="max-w-lg">
+
+        <!-- Create/Edit Modal -->
+        <Dialog
+            :open="showFormModal"
+            @update:open="showFormModal = $event"
+            class="max-w-lg"
+        >
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">
                     {{ selectedAkun ? 'Edit Account' : 'Create Account' }}
                 </h2>
-                
+
                 <form @submit.prevent="submitForm" class="space-y-4">
-                    <FormField label="Account Name" name="nama_akun" required>
-                        <Input v-model="form.nama_akun" placeholder="Enter account name" />
-                        <p v-if="form.errors.nama_akun" class="text-sm text-red-500">{{ form.errors.nama_akun }}</p>
+                    <FormField
+                        label="Account Name"
+                        name="nama_akun"
+                        :error="form.errors.nama_akun"
+                        required
+                    >
+                        <Input
+                            v-model="form.nama_akun"
+                            placeholder="Enter account name"
+                        />
                     </FormField>
-                    
+
                     <div class="grid grid-cols-2 gap-4">
-                        <FormField label="Bank Name" name="nama_bank">
+                        <FormField label="Bank Name" name="nama_bank" :error="form.errors.nama_bank">
                             <Input v-model="form.nama_bank" placeholder="e.g. BCA, Mandiri" />
                         </FormField>
-                        <FormField label="Account Holder" name="nama_rekening">
+                        <FormField
+                            label="Account Holder"
+                            name="nama_rekening"
+                            :error="form.errors.nama_rekening"
+                        >
                             <Input v-model="form.nama_rekening" placeholder="Account holder name" />
                         </FormField>
                     </div>
-                    
-                    <FormField label="Account Number" name="no_rekening">
+
+                    <FormField
+                        label="Account Number"
+                        name="no_rekening"
+                        :error="form.errors.no_rekening"
+                    >
                         <Input v-model="form.no_rekening" placeholder="e.g. 1234567890" />
                     </FormField>
-                    
-                    <FormField label="Notes" name="catatan">
-                        <textarea v-model="form.catatan" placeholder="Enter notes" class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" rows="3"></textarea>
+
+                    <FormField label="Notes" name="catatan" :error="form.errors.catatan">
+                        <textarea
+                            v-model="form.catatan"
+                            placeholder="Enter notes"
+                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            rows="3"
+                        ></textarea>
                     </FormField>
-                    
+
+                    <div class="flex items-center gap-2">
+                        <input
+                            id="is_active"
+                            v-model="form.is_active"
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label for="is_active" class="text-sm">Active</label>
+                    </div>
+
                     <div class="flex justify-end gap-2 pt-4">
-                        <Button type="button" variant="outline" @click="showCreateModal = false">Cancel</Button>
+                        <Button type="button" variant="outline" @click="closeFormModal">
+                            Cancel
+                        </Button>
                         <Button type="submit" :loading="form.processing">
                             {{ selectedAkun ? 'Update' : 'Create' }}
                         </Button>
@@ -210,16 +318,30 @@ function deleteAkun() {
                 </form>
             </div>
         </Dialog>
-        
-        <Dialog :open="showDeleteModal" @update:open="showDeleteModal = $event" class="max-w-md">
+
+        <!-- Delete Modal -->
+        <Dialog
+            :open="showDeleteModal"
+            @update:open="showDeleteModal = $event"
+            class="max-w-md"
+        >
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">Delete Account</h2>
                 <p class="text-muted-foreground">
-                    Are you sure you want to delete <strong>{{ selectedAkun?.nama_akun }}</strong>?
+                    Are you sure you want to delete
+                    <strong>{{ selectedAkun?.nama_akun }}</strong>?
                 </p>
                 <div class="flex justify-end gap-2 pt-4">
-                    <Button variant="outline" @click="showDeleteModal = false">Cancel</Button>
-                    <Button variant="destructive" @click="deleteAkun" :loading="form.processing">Delete</Button>
+                    <Button variant="outline" @click="closeDeleteModal">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        @click="deleteAkun"
+                        :loading="isDeleting"
+                    >
+                        Delete
+                    </Button>
                 </div>
             </div>
         </Dialog>

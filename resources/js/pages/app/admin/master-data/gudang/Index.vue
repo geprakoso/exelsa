@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref, computed } from 'vue'
-import { usePage, useForm, router } from '@inertiajs/vue3'
+import { usePage, useForm } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Button from '@/components/ui/button.vue'
@@ -28,26 +28,45 @@ interface Gudang {
     is_active: boolean
 }
 
-const gudangList = computed<Gudang[]>(() => page.props.gudang as Gudang[] || [])
-const isLoading = ref(false)
-const showCreateModal = ref(false)
-const showDeleteModal = ref(false)
-const selectedGudang = ref<Gudang | null>(null)
-const searchQuery = ref('')
+// Data dari props - client side untuk data kecil
+const gudangList = computed<Gudang[]>(() => (page.props.gudang as Gudang[]) || [])
 
-const pagination = ref({
-    current_page: 1,
-    last_page: 1,
-    per_page: 15,
-    total: 0,
+// Search dengan debounce
+const searchQuery = ref('')
+const isSearching = ref(false)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+function handleSearchInput(value: string) {
+    searchQuery.value = value
+    isSearching.value = true
+
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+        isSearching.value = false
+    }, 300)
+}
+
+// Filtered gudang - client side
+const filteredGudang = computed(() => {
+    const query = searchQuery.value.toLowerCase().trim()
+    if (!query) return gudangList.value
+
+    return gudangList.value.filter(
+        (g) =>
+            g.nama_gudang.toLowerCase().includes(query) ||
+            (g.lokasi_gudang?.toLowerCase().includes(query) ?? false) ||
+            (g.kota?.toLowerCase().includes(query) ?? false)
+    )
 })
 
-const columns = [
-    { key: 'nama_gudang', label: 'Warehouse Name', sortable: true },
-    { key: 'lokasi_gudang', label: 'Location', sortable: false },
-    { key: 'kota', label: 'City', sortable: true },
-    { key: 'is_active', label: 'Status', sortable: true },
-]
+// Loading states
+const isLoading = computed(() => isSearching.value)
+const isDeleting = ref(false)
+
+// Modal states
+const showFormModal = ref(false)
+const showDeleteModal = ref(false)
+const selectedGudang = ref<Gudang | null>(null)
 
 const form = useForm({
     nama_gudang: '',
@@ -62,11 +81,18 @@ const form = useForm({
     is_active: true,
 })
 
+const columns = [
+    { key: 'nama_gudang', label: 'Warehouse Name', sortable: true },
+    { key: 'lokasi_gudang', label: 'Location', sortable: false },
+    { key: 'kota', label: 'City', sortable: true },
+    { key: 'is_active', label: 'Status', sortable: true },
+]
+
 function openCreateModal() {
     selectedGudang.value = null
     form.reset()
     form.clearErrors()
-    showCreateModal.value = true
+    showFormModal.value = true
 }
 
 function openEditModal(gudang: Gudang) {
@@ -81,7 +107,7 @@ function openEditModal(gudang: Gudang) {
     form.longitude = gudang.longitude
     form.radius_km = gudang.radius_km
     form.is_active = gudang.is_active
-    showCreateModal.value = true
+    showFormModal.value = true
 }
 
 function openDeleteModal(gudang: Gudang) {
@@ -89,10 +115,26 @@ function openDeleteModal(gudang: Gudang) {
     showDeleteModal.value = true
 }
 
-function handleSort(field: string, direction: 'asc' | 'desc') {}
-function handlePageChange(page: number) {
-    pagination.value.current_page = page
+function closeFormModal() {
+    showFormModal.value = false
+    selectedGudang.value = null
+    form.reset()
+    form.clearErrors()
 }
+
+function closeDeleteModal() {
+    showDeleteModal.value = false
+    selectedGudang.value = null
+}
+
+function handleSort(field: string, direction: 'asc' | 'desc') {
+    console.log('Sort:', field, direction)
+}
+
+function handlePageChange(page: number) {
+    console.log('Page:', page)
+}
+
 function handleRowClick(gudang: Gudang) {
     openEditModal(gudang)
 }
@@ -101,29 +143,31 @@ function submitForm() {
     if (selectedGudang.value) {
         form.put(`/app/admin/master-data/gudang/${selectedGudang.value.id}`, {
             onSuccess: () => {
-                showCreateModal.value = false
-                form.reset()
+                closeFormModal()
             },
         })
     } else {
         form.post('/app/admin/master-data/gudang', {
             onSuccess: () => {
-                showCreateModal.value = false
-                form.reset()
+                closeFormModal()
             },
         })
     }
 }
 
 function deleteGudang() {
-    if (selectedGudang.value) {
-        form.delete(`/app/admin/master-data/gudang/${selectedGudang.value.id}`, {
-            onSuccess: () => {
-                showDeleteModal.value = false
-                selectedGudang.value = null
-            },
-        })
-    }
+    if (!selectedGudang.value) return
+
+    isDeleting.value = true
+    form.delete(`/app/admin/master-data/gudang/${selectedGudang.value.id}`, {
+        onSuccess: () => {
+            closeDeleteModal()
+            isDeleting.value = false
+        },
+        onError: () => {
+            isDeleting.value = false
+        },
+    })
 }
 </script>
 
@@ -135,7 +179,7 @@ function deleteGudang() {
                 description="Manage your warehouses/storage locations."
                 :breadcrumbs="[
                     { label: 'Master Data', href: '/app/admin/master-data' },
-                    { label: 'Warehouses' }
+                    { label: 'Warehouses' },
                 ]"
             >
                 <template #actions>
@@ -145,19 +189,28 @@ function deleteGudang() {
                     </Button>
                 </template>
             </PageHeader>
-            
+
             <Card class="p-6">
                 <div class="flex items-center gap-4 mb-6">
                     <div class="relative flex-1 max-w-sm">
-                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input v-model="searchQuery" placeholder="Search warehouses..." class="pl-10" />
+                        <Search
+                            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <Input
+                            :model-value="searchQuery"
+                            @update:model-value="handleSearchInput"
+                            placeholder="Search warehouses..."
+                            class="pl-10"
+                        />
+                    </div>
+                    <div v-if="isSearching" class="text-sm text-muted-foreground">
+                        Searching...
                     </div>
                 </div>
-                
+
                 <DataTable
-                    :data="gudangList"
+                    :data="filteredGudang"
                     :columns="columns"
-                    :pagination="pagination"
                     :loading="isLoading"
                     @sort="handleSort"
                     @page-change="handlePageChange"
@@ -170,66 +223,132 @@ function deleteGudang() {
                     </template>
                     <template #actions="{ row }">
                         <div class="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" @click.stop="openEditModal(row)">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                @click.stop="openEditModal(row)"
+                            >
                                 <Pencil class="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" @click.stop="openDeleteModal(row)">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                @click.stop="openDeleteModal(row)"
+                            >
                                 <Trash2 class="h-4 w-4 text-destructive" />
                             </Button>
                         </div>
                     </template>
                 </DataTable>
+
+                <div
+                    v-if="filteredGudang.length === 0 && !isLoading"
+                    class="text-center py-8 text-muted-foreground"
+                >
+                    No warehouses found
+                </div>
             </Card>
         </div>
-        
-        <Dialog :open="showCreateModal" @update:open="showCreateModal = $event" class="max-w-lg">
+
+        <!-- Create/Edit Modal -->
+        <Dialog
+            :open="showFormModal"
+            @update:open="showFormModal = $event"
+            class="max-w-lg"
+        >
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">
                     {{ selectedGudang ? 'Edit Warehouse' : 'Create Warehouse' }}
                 </h2>
-                
+
                 <form @submit.prevent="submitForm" class="space-y-4">
-                    <FormField label="Warehouse Name" name="nama_gudang" required>
-                        <Input v-model="form.nama_gudang" placeholder="Enter warehouse name" />
-                        <p v-if="form.errors.nama_gudang" class="text-sm text-red-500">{{ form.errors.nama_gudang }}</p>
+                    <FormField
+                        label="Warehouse Name"
+                        name="nama_gudang"
+                        :error="form.errors.nama_gudang"
+                        required
+                    >
+                        <Input
+                            v-model="form.nama_gudang"
+                            placeholder="Enter warehouse name"
+                        />
                     </FormField>
-                    
-                    <FormField label="Location Address" name="lokasi_gudang">
-                        <Input v-model="form.lokasi_gudang" placeholder="Enter location address" />
+
+                    <FormField
+                        label="Location Address"
+                        name="lokasi_gudang"
+                        :error="form.errors.lokasi_gudang"
+                    >
+                        <Input
+                            v-model="form.lokasi_gudang"
+                            placeholder="Enter location address"
+                        />
                     </FormField>
-                    
+
                     <div class="grid grid-cols-2 gap-4">
-                        <FormField label="Province" name="provinsi">
+                        <FormField label="Province" name="provinsi" :error="form.errors.provinsi">
                             <Input v-model="form.provinsi" placeholder="Provinsi" />
                         </FormField>
-                        <FormField label="City" name="kota">
+                        <FormField label="City" name="kota" :error="form.errors.kota">
                             <Input v-model="form.kota" placeholder="Kota" />
                         </FormField>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-4">
-                        <FormField label="District" name="kecamatan">
+                        <FormField label="District" name="kecamatan" :error="form.errors.kecamatan">
                             <Input v-model="form.kecamatan" placeholder="Kecamatan" />
                         </FormField>
-                        <FormField label="Sub-district" name="kelurahan">
+                        <FormField
+                            label="Sub-district"
+                            name="kelurahan"
+                            :error="form.errors.kelurahan"
+                        >
                             <Input v-model="form.kelurahan" placeholder="Kelurahan" />
                         </FormField>
                     </div>
-                    
+
                     <div class="grid grid-cols-3 gap-4">
-                        <FormField label="Latitude" name="latitude">
-                            <Input v-model.number="form.latitude" type="number" step="any" placeholder="-6.2" />
+                        <FormField label="Latitude" name="latitude" :error="form.errors.latitude">
+                            <Input
+                                v-model.number="form.latitude"
+                                type="number"
+                                step="any"
+                                placeholder="-6.2"
+                            />
                         </FormField>
-                        <FormField label="Longitude" name="longitude">
-                            <Input v-model.number="form.longitude" type="number" step="any" placeholder="106.8" />
+                        <FormField label="Longitude" name="longitude" :error="form.errors.longitude">
+                            <Input
+                                v-model.number="form.longitude"
+                                type="number"
+                                step="any"
+                                placeholder="106.8"
+                            />
                         </FormField>
-                        <FormField label="Radius (km)" name="radius_km">
-                            <Input v-model.number="form.radius_km" type="number" step="0.1" min="0" placeholder="1" />
+                        <FormField label="Radius (km)" name="radius_km" :error="form.errors.radius_km">
+                            <Input
+                                v-model.number="form.radius_km"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                placeholder="1"
+                            />
                         </FormField>
                     </div>
-                    
+
+                    <div class="flex items-center gap-2">
+                        <input
+                            id="is_active"
+                            v-model="form.is_active"
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-gray-300"
+                        />
+                        <label for="is_active" class="text-sm">Active</label>
+                    </div>
+
                     <div class="flex justify-end gap-2 pt-4">
-                        <Button type="button" variant="outline" @click="showCreateModal = false">Cancel</Button>
+                        <Button type="button" variant="outline" @click="closeFormModal">
+                            Cancel
+                        </Button>
                         <Button type="submit" :loading="form.processing">
                             {{ selectedGudang ? 'Update' : 'Create' }}
                         </Button>
@@ -237,16 +356,30 @@ function deleteGudang() {
                 </form>
             </div>
         </Dialog>
-        
-        <Dialog :open="showDeleteModal" @update:open="showDeleteModal = $event" class="max-w-md">
+
+        <!-- Delete Modal -->
+        <Dialog
+            :open="showDeleteModal"
+            @update:open="showDeleteModal = $event"
+            class="max-w-md"
+        >
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold">Delete Warehouse</h2>
                 <p class="text-muted-foreground">
-                    Are you sure you want to delete <strong>{{ selectedGudang?.nama_gudang }}</strong>?
+                    Are you sure you want to delete
+                    <strong>{{ selectedGudang?.nama_gudang }}</strong>?
                 </p>
                 <div class="flex justify-end gap-2 pt-4">
-                    <Button variant="outline" @click="showDeleteModal = false">Cancel</Button>
-                    <Button variant="destructive" @click="deleteGudang" :loading="form.processing">Delete</Button>
+                    <Button variant="outline" @click="closeDeleteModal">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        @click="deleteGudang"
+                        :loading="isDeleting"
+                    >
+                        Delete
+                    </Button>
                 </div>
             </div>
         </Dialog>
