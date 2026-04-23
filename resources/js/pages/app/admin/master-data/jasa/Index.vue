@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { ref } from 'vue'
-import { usePage, useForm } from '@inertiajs/vue3'
+import { usePage, useForm, router } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Button from '@/components/ui/button.vue'
@@ -95,6 +95,7 @@ function submitForm() {
             onSuccess: () => {
                 showCreateModal.value = false
                 form.reset()
+                router.reload({ only: ['jasa'] })
             },
         })
     } else {
@@ -102,6 +103,7 @@ function submitForm() {
             onSuccess: () => {
                 showCreateModal.value = false
                 form.reset()
+                router.reload({ only: ['jasa'] })
             },
         })
     }
@@ -113,6 +115,7 @@ function deleteJasa() {
             onSuccess: () => {
                 showDeleteModal.value = false
                 selectedJasa.value = null
+                router.reload({ only: ['jasa'] })
             },
         })
     }

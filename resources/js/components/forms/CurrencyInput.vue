@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, type PropType } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { ref, computed, watch } from 'vue'
 import { cn } from '@/lib/utils'
-import Input from '@/components/ui/input.vue'
-import Button from '@/components/ui/button.vue'
 import { formatCurrency } from '@/lib/utils'
 
 const props = defineProps<{
@@ -28,27 +25,26 @@ watch(() => props.modelValue, (val) => {
     }
 })
 
-const formattedValue = computed(() => {
+const displayValue = computed(() => {
+    if (isFocused.value) {
+        return inputValue.value
+    }
     if (!inputValue.value) return ''
-    const num = parseFloat(inputValue.value.replace(/[^\d.-]/g, ''))
+    const num = parseFloat(String(inputValue.value).replace(/[^\d.-]/g, ''))
     if (isNaN(num)) return ''
     return formatCurrency(num, props.currency || 'IDR')
 })
 
 function handleInput(e: Event) {
     const target = e.target as HTMLInputElement
-    inputValue.value = target.value
-    emit('update:modelValue', parseFloat(inputValue.value) || null)
+    // Hanya ambil angka
+    const rawValue = target.value.replace(/[^\d]/g, '')
+    inputValue.value = rawValue
+    emit('update:modelValue', rawValue ? parseFloat(rawValue) : null)
 }
 
 function handleBlur() {
     isFocused.value = false
-    if (inputValue.value) {
-        const num = parseFloat(inputValue.value.replace(/[^\d.-]/g, ''))
-        if (!isNaN(num)) {
-            inputValue.value = String(num)
-        }
-    }
 }
 
 function handleFocus() {
@@ -58,11 +54,11 @@ function handleFocus() {
 
 <template>
     <div :class="cn('relative', props.class)">
-        <Input
-            :value="isFocused ? inputValue : formattedValue"
+        <input
+            :value="displayValue"
             :placeholder="placeholder"
             :disabled="disabled"
-            class="pr-16 font-mono"
+            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-16 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             @input="handleInput"
             @focus="handleFocus"
             @blur="handleBlur"
