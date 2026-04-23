@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { usePage, useForm } from '@inertiajs/vue3'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
@@ -25,7 +25,7 @@ interface AkunTransaksi {
     catatan: string | null
 }
 
-const akunList = ref<AkunTransaksi[]>(page.props.akunTransaksi || [])
+const akunList = computed<AkunTransaksi[]>(() => page.props.akunTransaksi as AkunTransaksi[] || [])
 const isLoading = ref(false)
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
