@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
-import { ref, computed, onMounted, watch, h, useSlots, renderSlot } from 'vue'
+import { ref, computed, onMounted, watch, h, useSlots, renderSlot, shallowRef } from 'vue'
 import {
     useVueTable,
     createColumnHelper,
@@ -78,9 +78,13 @@ const rowSelection = ref<Record<string, boolean>>({})
 const slots = useSlots()
 const columnHelper = createColumnHelper<T>()
 
-const tableColumns = computed<ColumnDef<T, any>[]>(() => {
+// Use shallowRef to prevent re-renders on deep changes
+const tableColumns = shallowRef<ColumnDef<T, any>[]>([])
+
+// Function to build columns - only called when dependencies change
+function buildColumns() {
     const cols: ColumnDef<T, any>[] = []
-    
+
     if (props.selectable) {
         cols.push({
             id: 'select',
@@ -101,10 +105,10 @@ const tableColumns = computed<ColumnDef<T, any>[]>(() => {
             enableSorting: false,
         })
     }
-    
+
     for (const col of props.columns) {
         if (col.visible === false) continue
-        
+
         cols.push({
             accessorKey: col.key,
             header: ({ column }) => {
@@ -144,9 +148,12 @@ const tableColumns = computed<ColumnDef<T, any>[]>(() => {
             enableSorting: col.sortable,
         })
     }
-    
-    return cols
-})
+
+    tableColumns.value = cols
+}
+
+// Watch only the specific props that should trigger column rebuild
+watch(() => [props.columns, props.selectable], buildColumns, { immediate: true, deep: true })
 
 const table = useVueTable({
     get data() { return props.data },
