@@ -37,7 +37,7 @@ const form = ref({
         id: item.id_pembelian_item,
         id_produk: item.id_produk,
         qty: item.qty,
-        harga: item.harga,
+        harga: item.harga_jual || 0,
     })) as ItemRow[],
 })
 
@@ -64,15 +64,8 @@ function removeItem(index: number) {
     form.value.items.splice(index, 1)
 }
 
-// Auto-fill harga when product selected
-function onProductChange(item: ItemRow) {
-    if (item.id_produk) {
-        const produk = produks.value.find((p: any) => p.id === item.id_produk)
-        if (produk) {
-            item.harga = produk.harga_beli || 0
-        }
-    }
-}
+// harga_beli tidak ada di md_produk — user isi manual
+function onProductChange(_item: ItemRow) {}
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('id-ID', {
@@ -267,7 +260,7 @@ function submit() {
                                             :key="supplier.id"
                                             :value="supplier.id"
                                         >
-                                            {{ supplier.nama_supplier }} ({{ supplier.kode_supplier }})
+                                            {{ supplier.nama_supplier }}
                                         </option>
                                     </select>
                                 </div>

@@ -102,9 +102,9 @@ function deletePembelian() {
                                         <td class="px-3 py-3 text-center">{{ item.qty }}</td>
                                         <td class="px-3 py-3 text-center">{{ item.qty_masuk || 0 }}</td>
                                         <td class="px-3 py-3 text-center">{{ item.qty_sisa || item.qty }}</td>
-                                        <td class="px-3 py-3 text-right">{{ formatCurrency(item.harga) }}</td>
+                                        <td class="px-3 py-3 text-right">{{ formatCurrency(item.harga_jual) }}</td>
                                         <td class="px-3 py-3 text-right font-medium">
-                                            {{ formatCurrency((item.qty || 0) * (item.harga || 0)) }}
+                                            {{ formatCurrency((item.qty || 0) * (item.harga_jual || 0)) }}
                                         </td>
                                     </tr>
                                     <tr v-if="!pembelian?.items?.length">
@@ -160,7 +160,6 @@ function deletePembelian() {
                         </h3>
                         <div v-if="pembelian?.supplier" class="space-y-2">
                             <p class="font-medium">{{ pembelian.supplier.nama_supplier }}</p>
-                            <p class="text-sm text-muted-foreground">{{ pembelian.supplier.kode_supplier }}</p>
                         </div>
                         <p v-else class="text-muted-foreground">No supplier</p>
                         

@@ -268,7 +268,7 @@ if (form.value.items.length === 0) {
                                             :key="supplier.id"
                                             :value="supplier.id"
                                         >
-                                            {{ supplier.nama_supplier }} ({{ supplier.kode_supplier }})
+                                            {{ supplier.nama_supplier }}
                                         </option>
                                     </select>
                                 </div>

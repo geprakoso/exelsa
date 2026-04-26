@@ -68,7 +68,7 @@ class PembelianController extends Controller
      */
     public function create()
     {
-        $suppliers = Supplier::orderBy('nama_supplier')->get(['id', 'kode_supplier', 'nama_supplier']);
+        $suppliers = Supplier::orderBy('nama_supplier')->get(['id', 'nama_supplier']);
         $karyawans = Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']);
         
         $produks = Produk::with(['brand', 'kategori'])
@@ -139,8 +139,7 @@ class PembelianController extends Controller
                 'qty' => $itemData['qty'],
                 'qty_masuk' => 0,
                 'qty_sisa' => $itemData['qty'],
-                'harga' => $itemData['harga'],
-                'subtotal' => $itemData['qty'] * $itemData['harga'],
+                'harga_jual' => $itemData['harga'],
             ]);
         }
 
@@ -171,7 +170,7 @@ class PembelianController extends Controller
     {
         $pembelian->load(['items']);
 
-        $suppliers = Supplier::orderBy('nama_supplier')->get(['id', 'kode_supplier', 'nama_supplier']);
+        $suppliers = Supplier::orderBy('nama_supplier')->get(['id', 'nama_supplier']);
         $karyawans = Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']);
         $produks = Produk::with(['brand', 'kategori'])
             ->orderBy('nama_produk')
@@ -245,8 +244,7 @@ class PembelianController extends Controller
                 $item->update([
                     'id_produk' => $itemData['id_produk'],
                     'qty' => $itemData['qty'],
-                    'harga' => $itemData['harga'],
-                    'subtotal' => $itemData['qty'] * $itemData['harga'],
+                    'harga_jual' => $itemData['harga'],
                 ]);
             } else {
                 PembelianItem::create([
@@ -255,8 +253,7 @@ class PembelianController extends Controller
                     'qty' => $itemData['qty'],
                     'qty_masuk' => 0,
                     'qty_sisa' => $itemData['qty'],
-                    'harga' => $itemData['harga'],
-                    'subtotal' => $itemData['qty'] * $itemData['harga'],
+                    'harga_jual' => $itemData['harga'],
                 ]);
             }
         }
