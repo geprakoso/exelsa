@@ -15,32 +15,19 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: async (name) => {
-        console.log('[Inertia] Resolving page:', name);
-        try {
-            const page = await resolvePageComponent(`./pages/${name}.vue`, pages)
-            console.log('[Inertia] Resolved page successfully:', page);
-            page.default.layout = page.default.layout || AppLayout
-            return page
-        } catch (error) {
-            console.error('[Inertia] Error resolving page:', error);
-            throw error;
+        const module = await resolvePageComponent(`./pages/${name}.vue`, pages)
+        const page = (module as any).default || module
+        if (!page.layout) {
+            page.layout = AppLayout
         }
+        return page
     },
     setup({ el, App, props, plugin }) {
-        console.log('[Inertia] Setup triggered. Element:', el);
-        try {
-            const pinia = createPinia()
-            const vueApp = createApp({ render: () => h(App, props) })
-                .use(plugin)
-                .use(pinia)
-            
-            console.log('[Inertia] Mounting Vue app...');
-            const mountedApp = vueApp.mount(el)
-            console.log('[Inertia] App mounted successfully:', mountedApp);
-            return mountedApp;
-        } catch (err) {
-            console.error('[Inertia] Error during setup/mount:', err);
-        }
+        const pinia = createPinia()
+        const vueApp = createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .use(pinia)
+        return vueApp.mount(el)
     },
     progress: {
         color: '#4F46E5',
