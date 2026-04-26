@@ -25,16 +25,7 @@ class KategoriController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $kategori = Kategori::create($validated);
-
-        // Return JSON for AJAX requests (from produk form)
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'id' => $kategori->id,
-                'nama_kategori' => $kategori->nama_kategori,
-                'message' => 'Category created successfully',
-            ], 201);
-        }
+        Kategori::create($validated);
 
         return redirect()->back()->with('success', 'Kategori created successfully');
     }

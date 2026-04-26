@@ -71,6 +71,8 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('app.users.destroy');
         
         Route::prefix('master-data')->group(function () {
+            Route::get('/produk/search', [ProdukController::class, 'search'])->name('app.produk.search');
+            Route::get('/produk/{produk}', [ProdukController::class, 'show'])->name('app.produk.show');
             Route::get('/produk', [ProdukController::class, 'index'])->name('app.produk');
             Route::post('/produk', [ProdukController::class, 'store'])->name('app.produk.store');
             Route::match(['put', 'post'], '/produk/{produk}', [ProdukController::class, 'update'])->name('app.produk.update');

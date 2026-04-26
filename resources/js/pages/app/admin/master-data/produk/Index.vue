@@ -411,16 +411,15 @@ async function handleCreateBrand() {
     if (!newBrandName.value.trim()) return
 
     try {
-        const response = await api.post('/app/admin/master-data/brand', {
+        await router.post('/app/admin/master-data/brand', {
             nama_brand: newBrandName.value.trim(),
+        }, {
+            preserveState: true,
         })
-
-        form.brand_id = response.data.id
         closeCreateBrandModal()
         router.reload({ only: ['brands'], preserveState: true })
     } catch (error: any) {
         console.error('Failed to create brand:', error)
-        alert(error.response?.data?.message || 'Failed to create brand')
     }
 }
 
@@ -428,16 +427,15 @@ async function handleCreateKategori() {
     if (!newKategoriName.value.trim()) return
 
     try {
-        const response = await api.post('/app/admin/master-data/kategori', {
+        await router.post('/app/admin/master-data/kategori', {
             nama_kategori: newKategoriName.value.trim(),
+        }, {
+            preserveState: true,
         })
-
-        form.kategori_id = response.data.id
         closeCreateKategoriModal()
         router.reload({ only: ['kategoris'], preserveState: true })
     } catch (error: any) {
         console.error('Failed to create kategori:', error)
-        alert(error.response?.data?.message || 'Failed to create category')
     }
 }
 </script>

@@ -8,6 +8,9 @@ import Input from '@/components/ui/input.vue'
 import Card from '@/components/ui/card.vue'
 import Badge from '@/components/ui/badge.vue'
 import { ArrowLeft, Plus, Trash2, Package, Save } from 'lucide-vue-next'
+import ProdukSelect, { type ProdukOption } from '@/components/forms/ProdukSelect.vue'
+import RelationSelect, { type SelectOption } from '@/components/forms/RelationSelect.vue'
+import FormField from '@/components/forms/FormField.vue'
 
 const page = usePage()
 
@@ -16,6 +19,13 @@ const karyawans = computed(() => page.props.karyawans || [])
 const produks = computed(() => page.props.produks || [])
 const paymentAccounts = computed(() => page.props.paymentAccounts || [])
 const jenisPembayaranOptions = computed(() => page.props.jenisPembayaranOptions || [])
+
+const supplierOptions = computed<SelectOption[]>(() =>
+    (suppliers.value as any[]).map((s) => ({
+        label: s.nama_supplier,
+        value: s.id,
+    }))
+)
 
 interface ItemRow {
     id: string
@@ -30,8 +40,8 @@ const form = ref({
     id_karyawan: null as number | null,
     nota_supplier: '',
     catatan: '',
-    tipe_pembelian: 'barang',
-    jenis_pembayaran: 'cash',
+    tipe_pembelian: 'non_ppn',
+    jenis_pembayaran: 'lunas',
     tgl_tempo: '',
     items: [] as ItemRow[],
 })
@@ -61,13 +71,8 @@ function removeItem(index: number) {
 }
 
 // Auto-fill harga when product selected
-function onProductChange(item: ItemRow) {
-    if (item.id_produk) {
-        const produk = produks.value.find(p => p.id === item.id_produk)
-        if (produk) {
-            item.harga = produk.harga_beli || 0
-        }
-    }
+function onProductSelect(item: ItemRow, produk: ProdukOption) {
+    item.id_produk = produk.id
 }
 
 function formatCurrency(value: number) {
@@ -177,20 +182,12 @@ if (form.value.items.length === 0) {
                                     <tbody class="divide-y">
                                         <tr v-for="(item, index) in form.items" :key="item.id">
                                             <td class="px-3 py-2">
-                                                <select
-                                                    v-model="item.id_produk"
-                                                    class="w-full h-9 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                    @change="onProductChange(item)"
-                                                >
-                                                    <option :value="null">Select product...</option>
-                                                    <option
-                                                        v-for="produk in produks"
-                                                        :key="produk.id"
-                                                        :value="produk.id"
-                                                    >
-                                                        {{ produk.nama_produk }} - {{ produk.sku }}
-                                                    </option>
-                                                </select>
+                                                <ProdukSelect
+                                                    :model-value="item.id_produk"
+                                                    @update:model-value="item.id_produk = $event"
+                                                    @select="onProductSelect(item, $event)"
+                                                    placeholder="Search product..."
+                                                />
                                             </td>
                                             <td class="px-3 py-2">
                                                 <Input
@@ -258,19 +255,14 @@ if (form.value.items.length === 0) {
                                 
                                 <div>
                                     <label class="text-sm text-muted-foreground block mb-1">Supplier</label>
-                                    <select
+                                    <RelationSelect
                                         v-model="form.id_supplier"
-                                        class="w-full h-9 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    >
-                                        <option :value="null">Select supplier...</option>
-                                        <option
-                                            v-for="supplier in suppliers"
-                                            :key="supplier.id"
-                                            :value="supplier.id"
-                                        >
-                                            {{ supplier.nama_supplier }}
-                                        </option>
-                                    </select>
+                                        :options="supplierOptions"
+                                        placeholder="Select supplier..."
+                                        search-placeholder="Search supplier..."
+                                        empty-message="No suppliers found"
+                                        icon="building"
+                                    />
                                 </div>
                                 
                                 <div>
@@ -298,7 +290,7 @@ if (form.value.items.length === 0) {
                                     </select>
                                 </div>
                                 
-                                <div v-if="form.jenis_pembayaran === 'kredit'">
+                                <div v-if="form.jenis_pembayaran === 'tempo'">
                                     <label class="text-sm text-muted-foreground block mb-1">Due Date</label>
                                     <Input
                                         v-model="form.tgl_tempo"

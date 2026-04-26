@@ -30,9 +30,9 @@ class PembelianController extends Controller
         // Filter by status
         if ($request->status && $request->status !== 'all') {
             if ($request->status === 'lunas') {
-                $query->where('jenis_pembayaran', 'cash');
-            } elseif ($request->status === 'belum_lunas') {
-                $query->where('jenis_pembayaran', '!=', 'cash');
+                $query->where('jenis_pembayaran', 'lunas');
+            } elseif ($request->status === 'tempo') {
+                $query->where('jenis_pembayaran', 'tempo');
             }
         }
 
@@ -51,8 +51,8 @@ class PembelianController extends Controller
         // Stats summary
         $stats = [
             'total_count' => Pembelian::count(),
-            'cash_count' => Pembelian::where('jenis_pembayaran', 'cash')->count(),
-            'kredit_count' => Pembelian::where('jenis_pembayaran', 'kredit')->count(),
+            'lunas_count' => Pembelian::where('jenis_pembayaran', 'lunas')->count(),
+            'tempo_count' => Pembelian::where('jenis_pembayaran', 'tempo')->count(),
             'total_nilai' => Pembelian::sum('harga_jual') ?? 0,
         ];
 
@@ -86,9 +86,8 @@ class PembelianController extends Controller
             'produks' => $produks,
             'paymentAccounts' => $paymentAccounts,
             'jenisPembayaranOptions' => [
-                ['value' => 'cash', 'label' => 'Cash (Tunai)'],
-                ['value' => 'kredit', 'label' => 'Kredit (Tempo)'],
-                ['value' => 'transfer', 'label' => 'Transfer'],
+                ['value' => 'lunas', 'label' => 'Lunas (Cash)'],
+                ['value' => 'tempo', 'label' => 'Tempo (Kredit)'],
             ],
         ]);
     }
@@ -104,8 +103,8 @@ class PembelianController extends Controller
             'id_karyawan' => 'nullable|exists:md_karyawan,id',
             'nota_supplier' => 'nullable|string',
             'catatan' => 'nullable|string',
-            'tipe_pembelian' => 'nullable|string',
-            'jenis_pembayaran' => 'nullable|string',
+            'tipe_pembelian' => 'nullable|in:ppn,non_ppn',
+            'jenis_pembayaran' => 'nullable|in:lunas,tempo',
             'tgl_tempo' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.id_produk' => 'required|exists:md_produk,id',
@@ -125,8 +124,8 @@ class PembelianController extends Controller
             'id_karyawan' => $validated['id_karyawan'] ?? auth()->id(),
             'nota_supplier' => $validated['nota_supplier'] ?? null,
             'catatan' => $validated['catatan'] ?? null,
-            'tipe_pembelian' => $validated['tipe_pembelian'] ?? 'barang',
-            'jenis_pembayaran' => $validated['jenis_pembayaran'] ?? 'cash',
+            'tipe_pembelian' => $validated['tipe_pembelian'] ?? 'non_ppn',
+            'jenis_pembayaran' => $validated['jenis_pembayaran'] ?? 'lunas',
             'tgl_tempo' => $validated['tgl_tempo'] ?? null,
             'harga_jual' => $total, // Using harga_jual field for total purchase value
         ]);
@@ -176,10 +175,10 @@ class PembelianController extends Controller
             ->orderBy('nama_produk')
             ->get(['id', 'nama_produk', 'sku']);
 
-        $paymentAccounts = AkunTransaksi::where('jenis_akun', 'kas')
-            ->orWhere('jenis_akun', 'bank')
-            ->orderBy('nama')
-            ->get(['id', 'kode', 'nama', 'jenis_akun']);
+        $paymentAccounts = AkunTransaksi::where('jenis', 'kas')
+            ->orWhere('jenis', 'bank')
+            ->orderBy('nama_akun')
+            ->get(['id', 'kode_akun', 'nama_akun', 'jenis']);
 
         return Inertia::render('app/admin/transactions/pembelian/Edit', [
             'pembelian' => $pembelian,
@@ -188,9 +187,8 @@ class PembelianController extends Controller
             'produks' => $produks,
             'paymentAccounts' => $paymentAccounts,
             'jenisPembayaranOptions' => [
-                ['value' => 'cash', 'label' => 'Cash (Tunai)'],
-                ['value' => 'kredit', 'label' => 'Kredit (Tempo)'],
-                ['value' => 'transfer', 'label' => 'Transfer'],
+                ['value' => 'lunas', 'label' => 'Lunas (Cash)'],
+                ['value' => 'tempo', 'label' => 'Tempo (Kredit)'],
             ],
         ]);
     }
@@ -206,8 +204,8 @@ class PembelianController extends Controller
             'id_karyawan' => 'nullable|exists:md_karyawan,id',
             'nota_supplier' => 'nullable|string',
             'catatan' => 'nullable|string',
-            'tipe_pembelian' => 'nullable|string',
-            'jenis_pembayaran' => 'nullable|string',
+            'tipe_pembelian' => 'nullable|in:ppn,non_ppn',
+            'jenis_pembayaran' => 'nullable|in:lunas,tempo',
             'tgl_tempo' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:tb_pembelian_item,id_pembelian_item',
@@ -228,8 +226,8 @@ class PembelianController extends Controller
             'id_karyawan' => $validated['id_karyawan'] ?? auth()->id(),
             'nota_supplier' => $validated['nota_supplier'] ?? null,
             'catatan' => $validated['catatan'] ?? null,
-            'tipe_pembelian' => $validated['tipe_pembelian'] ?? 'barang',
-            'jenis_pembayaran' => $validated['jenis_pembayaran'] ?? 'cash',
+            'tipe_pembelian' => $validated['tipe_pembelian'] ?? 'non_ppn',
+            'jenis_pembayaran' => $validated['jenis_pembayaran'] ?? 'lunas',
             'tgl_tempo' => $validated['tgl_tempo'] ?? null,
             'harga_jual' => $total,
         ]);

@@ -95,12 +95,12 @@ function deletePembelian(id: number) {
                     <p class="text-2xl font-bold">{{ stats.total_count || 0 }}</p>
                 </Card>
                 <Card class="p-4">
-                    <p class="text-sm text-muted-foreground">Cash</p>
-                    <p class="text-2xl font-bold text-green-600">{{ stats.cash_count || 0 }}</p>
+                    <p class="text-sm text-muted-foreground">Lunas</p>
+                    <p class="text-2xl font-bold text-green-600">{{ stats.lunas_count || 0 }}</p>
                 </Card>
                 <Card class="p-4">
-                    <p class="text-sm text-muted-foreground">Kredit</p>
-                    <p class="text-2xl font-bold text-red-600">{{ stats.kredit_count || 0 }}</p>
+                    <p class="text-sm text-muted-foreground">Tempo</p>
+                    <p class="text-2xl font-bold text-red-600">{{ stats.tempo_count || 0 }}</p>
                 </Card>
                 <Card class="p-4">
                     <p class="text-sm text-muted-foreground">Total Nilai</p>
@@ -126,8 +126,8 @@ function deletePembelian(id: number) {
                         class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
                         <option value="all">All Status</option>
-                        <option value="lunas">Cash</option>
-                        <option value="belum_lunas">Kredit</option>
+                        <option value="lunas">Lunas</option>
+                        <option value="tempo">Tempo</option>
                     </select>
                     
                     <div class="flex gap-2">
@@ -185,9 +185,9 @@ function deletePembelian(id: number) {
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <Badge
-                                        :variant="pembelian.jenis_pembayaran === 'cash' ? 'success' : 'secondary'"
+                                        :variant="pembelian.jenis_pembayaran === 'lunas' ? 'success' : 'secondary'"
                                     >
-                                        {{ pembelian.jenis_pembayaran === 'cash' ? 'Cash' : 'Kredit' }}
+                                        {{ pembelian.jenis_pembayaran === 'lunas' ? 'Lunas' : 'Tempo' }}
                                     </Badge>
                                 </td>
                                 <td class="px-4 py-3">

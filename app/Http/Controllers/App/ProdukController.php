@@ -111,4 +111,52 @@ class ProdukController extends Controller
         $produk->delete();
         return redirect()->back()->with('success', 'Product deleted successfully');
     }
+
+    public function show(Produk $produk)
+    {
+        $produk->load(['brand', 'kategori', 'primaryImage']);
+
+        return response()->json([
+            'id' => $produk->id,
+            'nama_produk' => $produk->nama_produk,
+            'sku' => $produk->sku,
+            'brand' => $produk->brand ? ['id' => $produk->brand->id, 'nama_brand' => $produk->brand->nama_brand] : null,
+            'kategori' => $produk->kategori ? ['id' => $produk->kategori->id, 'nama_kategori' => $produk->kategori->nama_kategori] : null,
+            'image_url' => $produk->primaryImage?->url ?? $produk->image_url,
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $search = $request->query('q', '');
+        $limit = min((int) $request->query('limit', 50), 100);
+
+        $produks = Produk::with(['brand', 'kategori', 'primaryImage'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->query('brand_id'), function ($query, $brandId) {
+                $query->where('brand_id', $brandId);
+            })
+            ->when($request->query('kategori_id'), function ($query, $kategoriId) {
+                $query->where('kategori_id', $kategoriId);
+            })
+            ->orderBy('nama_produk')
+            ->limit($limit)
+            ->get();
+
+        return response()->json($produks->map(function ($produk) {
+            return [
+                'id' => $produk->id,
+                'nama_produk' => $produk->nama_produk,
+                'sku' => $produk->sku,
+                'brand' => $produk->brand ? ['id' => $produk->brand->id, 'nama_brand' => $produk->brand->nama_brand] : null,
+                'kategori' => $produk->kategori ? ['id' => $produk->kategori->id, 'nama_kategori' => $produk->kategori->nama_kategori] : null,
+                'image_url' => $produk->primaryImage?->url ?? $produk->image_url,
+            ];
+        }));
+    }
 }

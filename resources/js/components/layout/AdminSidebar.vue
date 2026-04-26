@@ -103,7 +103,8 @@ function setActiveMainNav(id: string) {
 
 function isActiveHref(href?: string): boolean {
     if (!href) return false
-    return window.location.pathname === href
+    const pathname = window.location.pathname
+    return pathname === href || pathname.startsWith(href + '/')
 }
 </script>
 
