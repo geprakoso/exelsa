@@ -173,7 +173,7 @@ function deletePembelian() {
                     <!-- Staff Info -->
                     <Card v-if="pembelian?.karyawan" class="p-6">
                         <h3 class="font-semibold mb-4">Staff</h3>
-                        <p>{{ pembelian.karyawan.nama }}</p>
+                        <p>{{ pembelian.karyawan.nama_karyawan }}</p>
                     </Card>
                 </div>
             </div>

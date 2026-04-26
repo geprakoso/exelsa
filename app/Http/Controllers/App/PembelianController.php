@@ -69,16 +69,16 @@ class PembelianController extends Controller
     public function create()
     {
         $suppliers = Supplier::orderBy('nama_supplier')->get(['id', 'kode_supplier', 'nama_supplier']);
-        $karyawans = Karyawan::orderBy('nama')->get(['id', 'kode_karyawan', 'nama']);
+        $karyawans = Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']);
         
         $produks = Produk::with(['brand', 'kategori'])
             ->orderBy('nama_produk')
-            ->get(['id', 'nama_produk', 'sku', 'harga_beli']);
+            ->get(['id', 'nama_produk', 'sku']);
 
-        $paymentAccounts = AkunTransaksi::where('jenis_akun', 'kas')
-            ->orWhere('jenis_akun', 'bank')
-            ->orderBy('nama')
-            ->get(['id', 'kode', 'nama', 'jenis_akun']);
+        $paymentAccounts = AkunTransaksi::where('jenis', 'kas')
+            ->orWhere('jenis', 'bank')
+            ->orderBy('nama_akun')
+            ->get(['id', 'kode_akun', 'nama_akun', 'jenis']);
 
         return Inertia::render('app/admin/transactions/pembelian/Create', [
             'suppliers' => $suppliers,
@@ -100,15 +100,15 @@ class PembelianController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => 'required|date',
-            'id_supplier' => 'nullable|exists:suppliers,id',
-            'id_karyawan' => 'nullable|exists:karyawans,id',
+            'id_supplier' => 'nullable|exists:md_suppliers,id',
+            'id_karyawan' => 'nullable|exists:md_karyawan,id',
             'nota_supplier' => 'nullable|string',
             'catatan' => 'nullable|string',
             'tipe_pembelian' => 'nullable|string',
             'jenis_pembayaran' => 'nullable|string',
             'tgl_tempo' => 'nullable|date',
             'items' => 'required|array|min:1',
-            'items.*.id_produk' => 'required|exists:produks,id',
+            'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga' => 'required|numeric|min:0',
         ]);
@@ -172,10 +172,10 @@ class PembelianController extends Controller
         $pembelian->load(['items']);
 
         $suppliers = Supplier::orderBy('nama_supplier')->get(['id', 'kode_supplier', 'nama_supplier']);
-        $karyawans = Karyawan::orderBy('nama')->get(['id', 'kode_karyawan', 'nama']);
+        $karyawans = Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']);
         $produks = Produk::with(['brand', 'kategori'])
             ->orderBy('nama_produk')
-            ->get(['id', 'nama_produk', 'sku', 'harga_beli']);
+            ->get(['id', 'nama_produk', 'sku']);
 
         $paymentAccounts = AkunTransaksi::where('jenis_akun', 'kas')
             ->orWhere('jenis_akun', 'bank')
@@ -203,8 +203,8 @@ class PembelianController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => 'required|date',
-            'id_supplier' => 'nullable|exists:suppliers,id',
-            'id_karyawan' => 'nullable|exists:karyawans,id',
+            'id_supplier' => 'nullable|exists:md_suppliers,id',
+            'id_karyawan' => 'nullable|exists:md_karyawan,id',
             'nota_supplier' => 'nullable|string',
             'catatan' => 'nullable|string',
             'tipe_pembelian' => 'nullable|string',
@@ -212,7 +212,7 @@ class PembelianController extends Controller
             'tgl_tempo' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:tb_pembelian_item,id_pembelian_item',
-            'items.*.id_produk' => 'required|exists:produks,id',
+            'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga' => 'required|numeric|min:0',
         ]);

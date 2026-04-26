@@ -166,7 +166,7 @@ function deletePenjualan() {
                     <!-- Cashier Info -->
                     <Card v-if="penjualan?.karyawan" class="p-6">
                         <h3 class="font-semibold mb-4">Cashier</h3>
-                        <p>{{ penjualan.karyawan.nama }}</p>
+                        <p>{{ penjualan.karyawan.nama_karyawan }}</p>
                     </Card>
                     
                     <!-- Payments -->

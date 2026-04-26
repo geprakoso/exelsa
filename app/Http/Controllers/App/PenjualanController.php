@@ -68,19 +68,19 @@ class PenjualanController extends Controller
     public function create()
     {
         $members = Member::orderBy('nama_member')->get(['id', 'kode_member', 'nama_member']);
-        $karyawans = Karyawan::orderBy('nama')->get(['id', 'kode_karyawan', 'nama']);
-        $gudangs = Gudang::orderBy('nama')->get(['id', 'kode', 'nama']);
+        $karyawans = Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']);
+        $gudangs = Gudang::orderBy('nama_gudang')->get(['id', 'nama_gudang']);
         
         // Get products with stock info
         $produks = Produk::with(['brand', 'kategori'])
             ->orderBy('nama_produk')
-            ->get(['id', 'nama_produk', 'sku', 'harga_jual']);
+            ->get(['id', 'nama_produk', 'sku']);
 
         // Get payment accounts for payments
-        $paymentAccounts = AkunTransaksi::where('jenis_akun', 'kas')
-            ->orWhere('jenis_akun', 'bank')
-            ->orderBy('nama')
-            ->get(['id', 'kode', 'nama', 'jenis_akun']);
+        $paymentAccounts = AkunTransaksi::where('jenis', 'kas')
+            ->orWhere('jenis', 'bank')
+            ->orderBy('nama_akun')
+            ->get(['id', 'kode_akun', 'nama_akun', 'jenis']);
 
         return Inertia::render('app/admin/transactions/penjualan/Create', [
             'members' => $members,
@@ -104,13 +104,13 @@ class PenjualanController extends Controller
     {
         $validated = $request->validate([
             'tanggal_penjualan' => 'required|date',
-            'id_member' => 'nullable|exists:members,id',
-            'id_karyawan' => 'nullable|exists:karyawans,id',
-            'gudang_id' => 'nullable|exists:gudangs,id',
+            'id_member' => 'nullable|exists:md_members,id',
+            'id_karyawan' => 'nullable|exists:md_karyawan,id',
+            'gudang_id' => 'nullable|exists:md_gudang,id',
             'catatan' => 'nullable|string',
             'diskon_total' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
-            'items.*.id_produk' => 'required|exists:produks,id',
+            'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga_jual' => 'required|numeric|min:0',
             'pembayarans' => 'nullable|array',
@@ -219,11 +219,11 @@ class PenjualanController extends Controller
         ]);
 
         $members = Member::orderBy('nama_member')->get(['id', 'kode_member', 'nama_member']);
-        $karyawans = Karyawan::orderBy('nama')->get(['id', 'kode_karyawan', 'nama']);
-        $gudangs = Gudang::orderBy('nama')->get(['id', 'kode', 'nama']);
+        $karyawans = Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']);
+        $gudangs = Gudang::orderBy('nama_gudang')->get(['id', 'nama_gudang']);
         $produks = Produk::with(['brand', 'kategori'])
             ->orderBy('nama_produk')
-            ->get(['id', 'nama_produk', 'sku', 'harga_jual']);
+            ->get(['id', 'nama_produk', 'sku']);
 
         return Inertia::render('app/admin/transactions/penjualan/Edit', [
             'penjualan' => $penjualan,
@@ -241,14 +241,14 @@ class PenjualanController extends Controller
     {
         $validated = $request->validate([
             'tanggal_penjualan' => 'required|date',
-            'id_member' => 'nullable|exists:members,id',
-            'id_karyawan' => 'nullable|exists:karyawans,id',
-            'gudang_id' => 'nullable|exists:gudangs,id',
+            'id_member' => 'nullable|exists:md_members,id',
+            'id_karyawan' => 'nullable|exists:md_karyawan,id',
+            'gudang_id' => 'nullable|exists:md_gudang,id',
             'catatan' => 'nullable|string',
             'diskon_total' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:tb_penjualan_item,id_penjualan_item',
-            'items.*.id_produk' => 'required|exists:produks,id',
+            'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.harga_jual' => 'required|numeric|min:0',
         ]);

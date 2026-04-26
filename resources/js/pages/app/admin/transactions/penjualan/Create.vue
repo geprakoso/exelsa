@@ -87,13 +87,10 @@ function removeItem(index: number) {
     form.value.items.splice(index, 1)
 }
 
-// Auto-fill harga when product selected
+// Auto-fill harga when product selected — harga diisi manual karena tidak ada di data produk
 function onProductChange(item: ItemRow) {
-    if (item.id_produk) {
-        const produk = produks.value.find(p => p.id === item.id_produk)
-        if (produk) {
-            item.harga_jual = produk.harga_jual || 0
-        }
+    if (!item.id_produk) {
+        item.harga_jual = 0
     }
 }
 
@@ -332,7 +329,7 @@ if (grandTotal.value > 0) {
                                                 :key="account.id"
                                                 :value="account.id"
                                             >
-                                                {{ account.nama }} ({{ account.jenis_akun }})
+                                                {{ account.nama_akun }} ({{ account.jenis }})
                                             </option>
                                         </select>
                                     </div>
@@ -418,7 +415,7 @@ if (grandTotal.value > 0) {
                                             :key="gudang.id"
                                             :value="gudang.id"
                                         >
-                                            {{ gudang.nama }} ({{ gudang.kode }})
+                                            {{ gudang.nama_gudang }}
                                         </option>
                                     </select>
                                 </div>
