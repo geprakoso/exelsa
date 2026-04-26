@@ -170,6 +170,11 @@ class Penjualan extends Model
         return $this->hasOne(TukarTambah::class, 'penjualan_id', 'id_penjualan');
     }
 
+    public function gudang()
+    {
+        return $this->belongsTo(Gudang::class, 'gudang_id');
+    }
+
     public function scopePosOnly(Builder $query): Builder
     {
         return $query->where(function (Builder $query): void {

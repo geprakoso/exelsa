@@ -8,6 +8,7 @@ import Input from '@/components/ui/input.vue'
 import Card from '@/components/ui/card.vue'
 import Badge from '@/components/ui/badge.vue'
 import { ArrowLeft, Plus, Trash2, ShoppingCart, Save, CreditCard, Banknote } from 'lucide-vue-next'
+import ProdukSelect, { type ProdukOption } from '@/components/forms/ProdukSelect.vue'
 
 const page = usePage()
 
@@ -87,11 +88,8 @@ function removeItem(index: number) {
     form.value.items.splice(index, 1)
 }
 
-// Auto-fill harga when product selected — harga diisi manual karena tidak ada di data produk
-function onProductChange(item: ItemRow) {
-    if (!item.id_produk) {
-        item.harga_jual = 0
-    }
+function onProductSelect(item: ItemRow, produk: ProdukOption) {
+    item.id_produk = produk.id
 }
 
 // Add payment row
@@ -237,20 +235,12 @@ if (grandTotal.value > 0) {
                                     <tbody class="divide-y">
                                         <tr v-for="(item, index) in form.items" :key="item.id">
                                             <td class="px-3 py-2">
-                                                <select
-                                                    v-model="item.id_produk"
-                                                    class="w-full h-9 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                    @change="onProductChange(item)"
-                                                >
-                                                    <option :value="null">Select product...</option>
-                                                    <option
-                                                        v-for="produk in produks"
-                                                        :key="produk.id"
-                                                        :value="produk.id"
-                                                    >
-                                                        {{ produk.nama_produk }} - {{ produk.sku }}
-                                                    </option>
-                                                </select>
+                                                <ProdukSelect
+                                                    :model-value="item.id_produk"
+                                                    @update:model-value="item.id_produk = $event"
+                                                    @select="onProductSelect(item, $event)"
+                                                    placeholder="Search product..."
+                                                />
                                             </td>
                                             <td class="px-3 py-2">
                                                 <Input
