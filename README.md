@@ -68,6 +68,14 @@ Sistem Point of Sale (POS) modern untuk manajemen bisnis coffee shop dan retail,
 
 Berikut adalah riwayat perubahan aplikasi dari yang terbaru hingga yang terlama:
 
+### 📦 Versi 1.7.0 - 24-28 April 2026
+**Inventory & Transaksi**
+- 📦 Halaman Manajemen Inventori terpadu (Visualisasi stok & valuasi)
+- 🔀 Kategorisasi filter Produk Fisik dan Servis
+- 🛠️ Stabilisasi modul Transaksi (Penjualan & Pembelian)
+- 🧭 Pembaruan struktur Navigation Bar
+- 🛡️ Audit dan perbaikan integritas data stok
+
 ### 🐛 Versi 1.6.0 - 10-23 April 2026
 **Polishing & Bug Fixes**
 - 🔧 Perbaikan modal dan popup produk
@@ -228,4 +236,4 @@ Exelsa POS adalah sistem manajemen bisnis all-in-one yang dirancang khusus untuk
 
 ---
 
-*Terakhir diperbarui: 23 April 2026*
+*Terakhir diperbarui: 28 April 2026*
