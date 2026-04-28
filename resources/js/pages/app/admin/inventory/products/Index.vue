@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, Fragment } from 'vue'
 import { usePage, useForm, router } from '@inertiajs/vue3'
 import axios from 'axios'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -8,6 +8,7 @@ import Card from '@/components/ui/card.vue'
 import Badge from '@/components/ui/badge.vue'
 import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
+import Checkbox from '@/components/ui/checkbox.vue'
 import Dialog from '@/components/ui/dialog.vue'
 import Sheet from '@/components/ui/sheet/index.vue'
 import SheetContent from '@/components/ui/sheet/sheet.vue'
@@ -111,6 +112,7 @@ const threshold  = computed(() => page.props.low_stock_threshold)
 // ── Filters ───────────────────────────────────────────────────────────────
 const searchQuery  = ref(page.props.filters.search   || '')
 const kategoriId   = ref(page.props.filters.kategori_id || '')
+const tipeProdukFilter = ref(page.props.filters.tipe_produk || 'all')
 const activeTab    = ref(page.props.filters.tab      || 'all')
 const perPage      = ref(page.props.filters.per_page || '10')
 
@@ -120,6 +122,7 @@ function navigate(extra: Record<string, string | number | undefined> = {}) {
     router.get('/app/admin/inventory/products', {
         search:      searchQuery.value  || undefined,
         kategori_id: kategoriId.value   || undefined,
+        tipe_produk: tipeProdukFilter.value !== 'all' ? tipeProdukFilter.value : undefined,
         tab:         activeTab.value !== 'all' ? activeTab.value : undefined,
         per_page:    perPage.value !== '10'    ? perPage.value   : undefined,
         ...extra,
@@ -131,6 +134,7 @@ watch(searchQuery, (v) => {
     debounce = setTimeout(() => navigate({ page: 1 }), 300)
 })
 watch(kategoriId, () => navigate({ page: 1 }))
+watch(tipeProdukFilter, () => navigate({ page: 1 }))
 watch(activeTab,  () => navigate({ page: 1 }))
 watch(perPage,    () => navigate({ page: 1 }))
 
@@ -203,6 +207,20 @@ function netMovement(p: Product): number {
 
 // Selectable rows
 const selectedIds = ref<Set<number>>(new Set())
+const activeDropdownId = ref<number | null>(null)
+
+const closeDropdown = () => {
+    activeDropdownId.value = null
+}
+
+onMounted(() => {
+    window.addEventListener('click', closeDropdown)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('click', closeDropdown)
+})
+
 const allSelected = computed(() =>
     products.value.length > 0 && products.value.every(p => selectedIds.value.has(p.id))
 )
@@ -274,6 +292,9 @@ const imageUploadRef = ref<InstanceType<typeof MultiImageUpload> | null>(null)
 
 const form = useForm({
     nama_produk: '',
+    tipe_produk: 'physical',
+    is_sellable: true,
+    is_purchasable: true,
     kategori_id: null as number | null,
     brand_id: null as number | null,
     sku: '',
@@ -303,6 +324,9 @@ const kategoriOptions = computed<SelectOption[]>(() =>
 function openCreateForm() {
     selectedProduk.value = null
     form.reset()
+    form.tipe_produk = 'physical'
+    form.is_sellable = true
+    form.is_purchasable = true
     form.clearErrors()
     selectedImageFiles.value = []
     imageUploadRef.value?.clearAllPreviews()
@@ -312,6 +336,9 @@ function openCreateForm() {
 function openEditForm(produk: Product) {
     selectedProduk.value = produk
     form.nama_produk = produk.nama_produk
+    form.tipe_produk = produk.tipe_produk || 'physical'
+    form.is_sellable = produk.is_sellable ?? true
+    form.is_purchasable = produk.is_purchasable ?? true
     form.sku = produk.sku || ''
     form.sn = produk.sn || ''
     form.garansi = produk.garansi || ''
@@ -342,7 +369,11 @@ function submitForm() {
     Object.keys(formData_obj).forEach((key) => {
         const value = formData_obj[key]
         if (value !== null && value !== undefined && value !== '') {
-            formData.append(key, String(value))
+            if (typeof value === 'boolean') {
+                formData.append(key, value ? '1' : '0')
+            } else {
+                formData.append(key, String(value))
+            }
         }
     })
 
@@ -659,7 +690,6 @@ const primaryImage = (p: Product) => {
 
                     <!-- Category filter -->
                     <div class="flex flex-col gap-0.5">
-                        <label class="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Category</label>
                         <select
                             v-model="kategoriId"
                             class="h-9 rounded-md border border-input bg-background px-3 py-2 text-sm min-w-[140px]"
@@ -669,6 +699,34 @@ const primaryImage = (p: Product) => {
                                 {{ k.nama_kategori }}
                             </option>
                         </select>
+                    </div>
+
+                    <!-- Tipe Produk Tabs Filter -->
+                    <div class="inline-flex h-9 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground sm:ml-auto">
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                            :class="tipeProdukFilter === 'all' ? 'bg-background text-foreground shadow-sm' : ''"
+                            @click="tipeProdukFilter = 'all'"
+                        >
+                            All
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                            :class="tipeProdukFilter === 'physical' ? 'bg-background text-foreground shadow-sm' : ''"
+                            @click="tipeProdukFilter = 'physical'"
+                        >
+                            Products
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                            :class="tipeProdukFilter === 'service' ? 'bg-background text-foreground shadow-sm' : ''"
+                            @click="tipeProdukFilter = 'service'"
+                        >
+                            Services
+                        </button>
                     </div>
                 </div>
 
@@ -840,15 +898,33 @@ const primaryImage = (p: Product) => {
                                         >
                                             <Pencil class="h-3.5 w-3.5" />
                                         </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            class="h-7 w-7"
-                                            title="More"
-                                            disabled
-                                        >
-                                            <MoreHorizontal class="h-3.5 w-3.5" />
-                                        </Button>
+                                        <div class="relative">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                class="h-7 w-7"
+                                                title="More actions"
+                                                @click.stop="activeDropdownId = activeDropdownId === product.id ? null : product.id"
+                                            >
+                                                <MoreHorizontal class="h-3.5 w-3.5" />
+                                            </Button>
+
+                                            <div
+                                                v-if="activeDropdownId === product.id"
+                                                class="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-md border bg-card p-1 shadow-lg"
+                                            >
+                                                <button
+                                                    class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                                                    @click.stop="
+                                                        openDeleteModal(product);
+                                                        activeDropdownId = null;
+                                                    "
+                                                >
+                                                    <Trash2 class="h-3.5 w-3.5" />
+                                                    <span>Delete</span>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -918,14 +994,15 @@ const primaryImage = (p: Product) => {
             </Card>
 
         </div>
-    <!-- Sheet/Slide Canvas Mode -->
-        <Sheet v-if="viewMode === 'sheet'">
-            <SheetContent
+    <!-- Dynamic Form Wrapper (Sheet or Dialog) -->
+        <component :is="viewMode === 'sheet' ? Sheet : 'div'" v-if="showForm || viewMode === 'sheet'">
+            <component
+                :is="viewMode === 'sheet' ? SheetContent : Dialog"
                 :open="showForm"
                 @update:open="showForm = $event"
-                class="w-[600px] sm:max-w-[600px]"
+                :class="viewMode === 'sheet' ? 'w-[600px] sm:max-w-[600px]' : 'max-w-2xl max-h-[90vh]'"
             >
-                <div class="space-y-6 h-full flex flex-col">
+                <div :class="viewMode === 'sheet' ? 'space-y-6 h-full flex flex-col' : 'space-y-6 flex flex-col max-h-[calc(90vh-3rem)]'">
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <h2 class="text-lg font-semibold">
@@ -939,19 +1016,13 @@ const primaryImage = (p: Product) => {
                                 }}
                             </p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <div
-                                class="flex items-center gap-1 rounded-lg border bg-muted p-1"
-                            >
+                        <div class="flex items-center gap-2" :class="viewMode === 'modal' ? '-mr-2 -mt-2' : ''">
+                            <div class="flex items-center gap-1 rounded-lg border bg-muted p-1">
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     class="h-7 w-7"
-                                    :class="
-                                        viewMode === 'sheet'
-                                            ? 'bg-background shadow-sm'
-                                            : 'hover:bg-transparent'
-                                    "
+                                    :class="viewMode === 'sheet' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
                                     @click="toggleViewMode('sheet')"
                                     title="Slide Canvas Mode"
                                 >
@@ -961,129 +1032,125 @@ const primaryImage = (p: Product) => {
                                     variant="ghost"
                                     size="icon"
                                     class="h-7 w-7"
-                                    :class="
-                                        viewMode === 'modal'
-                                            ? 'bg-background shadow-sm'
-                                            : 'hover:bg-transparent'
-                                    "
+                                    :class="viewMode === 'modal' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
                                     @click="toggleViewMode('modal')"
                                     title="Modal/Popup Mode"
                                 >
                                     <Maximize2 class="h-3.5 w-3.5" />
                                 </Button>
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="shrink-0"
-                                @click="closeForm"
-                                title="Close"
-                            >
+                            <Button variant="ghost" size="icon" class="shrink-0" @click="closeForm" title="Close">
                                 <X class="h-4 w-4" />
                             </Button>
                         </div>
                     </div>
 
-                    <form
-                        @submit.prevent="submitForm"
-                        class="space-y-4 flex-1 overflow-y-auto pr-2"
-                    >
-                        <FormField
-                            label="Product Name"
-                            name="nama_produk"
-                            required
+                    <!-- Segmented Control for Tipe Produk -->
+                    <div class="inline-flex h-10 w-full items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                        <button
+                            type="button"
+                            class="inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                            :class="form.tipe_produk === 'physical' ? 'bg-background text-foreground shadow-sm' : ''"
+                            @click="form.tipe_produk = 'physical'; form.is_purchasable = true"
                         >
-                            <Input
-                                v-model="form.nama_produk"
-                                placeholder="Enter product name"
-                            />
-                            <p
-                                v-if="form.errors.nama_produk"
-                                class="text-sm text-red-500"
-                            >
+                            Physical Product
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                            :class="form.tipe_produk === 'service' ? 'bg-background text-foreground shadow-sm' : ''"
+                            @click="form.tipe_produk = 'service'; form.is_purchasable = false; form.brand_id = null; form.kategori_id = null"
+                        >
+                            Service
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="submitForm" class="space-y-4 overflow-y-auto pr-2" :class="viewMode === 'sheet' ? 'flex-1' : ''">
+                        <FormField label="Product Name" name="nama_produk" required>
+                            <Input v-model="form.nama_produk" placeholder="Enter product name" />
+                            <p v-if="form.errors.nama_produk" class="text-sm text-red-500">
                                 {{ form.errors.nama_produk }}
                             </p>
                         </FormField>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <FormField label="Brand" name="brand_id">
-                                <RelationSelect
-                                    v-model="form.brand_id"
-                                    :options="brandOptions"
-                                    placeholder="Select brand"
-                                    :enable-create="true"
-                                    create-label="Create brand"
-                                    @create="openCreateBrandModal"
-                                />
-                            </FormField>
+                        <template v-if="form.tipe_produk === 'physical'">
+                            <div class="grid grid-cols-2 gap-4">
+                                <FormField label="Brand" name="brand_id" required>
+                                    <RelationSelect
+                                        v-model="form.brand_id"
+                                        :options="brandOptions"
+                                        placeholder="Select brand..."
+                                        search-placeholder="Search brand..."
+                                        empty-message="No brands found"
+                                        icon="building"
+                                        :clearable="true"
+                                        :enable-create="true"
+                                        create-label="Create brand"
+                                        @create="openCreateBrandModal"
+                                    />
+                                </FormField>
 
-                            <FormField label="Category" name="kategori_id">
-                                <RelationSelect
-                                    v-model="form.kategori_id"
-                                    :options="kategoriOptions"
-                                    placeholder="Select category"
-                                    :enable-create="true"
-                                    create-label="Create category"
-                                    @create="openCreateKategoriModal"
-                                />
-                            </FormField>
-                        </div>
+                                <FormField label="Category" name="kategori_id" required>
+                                    <RelationSelect
+                                        v-model="form.kategori_id"
+                                        :options="kategoriOptions"
+                                        placeholder="Select category..."
+                                        search-placeholder="Search category..."
+                                        empty-message="No categories found"
+                                        icon="tag"
+                                        :clearable="true"
+                                        :enable-create="true"
+                                        create-label="Create category"
+                                        @create="openCreateKategoriModal"
+                                    />
+                                </FormField>
+                            </div>
+                        </template>
 
                         <FormField label="SKU" name="sku">
-                            <Input
-                                v-model="form.sku"
-                                placeholder="Auto-generated if empty"
-                            />
+                            <Input v-model="form.sku" placeholder="Auto-generated if empty" />
                             <p v-if="form.errors.sku" class="text-sm text-red-500">
                                 {{ form.errors.sku }}
                             </p>
                         </FormField>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-3 py-2" v-if="form.tipe_produk === 'service'">
+                            <div class="flex items-center space-x-2">
+                                <Checkbox id="is_purchasable" v-model="form.is_purchasable" :checked="form.is_purchasable" @update:checked="val => form.is_purchasable = !!val" />
+                                <label for="is_purchasable" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Can be purchased
+                                    <span class="text-xs text-muted-foreground ml-2 font-normal">(Optional for services)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <template v-if="form.tipe_produk === 'physical'">
+                            <div class="grid grid-cols-2 gap-4">
                             <FormField label="Serial Number" name="sn">
                                 <Input v-model="form.sn" placeholder="SN (optional)" />
                             </FormField>
 
                             <FormField label="Warranty" name="garansi">
-                                <Input
-                                    v-model="form.garansi"
-                                    placeholder="Warranty period"
-                                />
+                                <Input v-model="form.garansi" placeholder="Warranty period" />
                             </FormField>
                         </div>
 
                         <FormField label="Weight (gram)" name="berat">
-                            <Input
-                                v-model.number="form.berat"
-                                type="number"
-                                min="0"
-                                placeholder="Weight in grams"
-                            />
+                            <Input v-model.number="form.berat" type="number" min="0" placeholder="Weight in grams" />
                         </FormField>
 
                         <div class="grid grid-cols-3 gap-4">
                             <FormField label="Length (cm)" name="panjang">
-                                <Input
-                                    v-model.number="form.panjang"
-                                    type="number"
-                                    min="0"
-                                />
+                                <Input v-model.number="form.panjang" type="number" min="0" />
                             </FormField>
                             <FormField label="Width (cm)" name="lebar">
-                                <Input
-                                    v-model.number="form.lebar"
-                                    type="number"
-                                    min="0"
-                                />
+                                <Input v-model.number="form.lebar" type="number" min="0" />
                             </FormField>
                             <FormField label="Height (cm)" name="tinggi">
-                                <Input
-                                    v-model.number="form.tinggi"
-                                    type="number"
-                                    min="0"
-                                />
+                                <Input v-model.number="form.tinggi" type="number" min="0" />
                             </FormField>
                         </div>
+                        </template>
 
                         <FormField label="Description" name="deskripsi">
                             <textarea
@@ -1112,208 +1179,13 @@ const primaryImage = (p: Product) => {
                         <Button type="button" variant="outline" @click="closeForm">
                             Cancel
                         </Button>
-                        <Button
-                            type="submit"
-                            :loading="form.processing"
-                            @click="submitForm"
-                        >
+                        <Button type="submit" :loading="form.processing" @click="submitForm">
                             {{ selectedProduk ? 'Update Product' : 'Create Product' }}
                         </Button>
                     </div>
                 </div>
-            </SheetContent>
-        </Sheet>
-
-        <!-- Modal/Dialog Mode -->
-        <Dialog
-            v-else
-            :open="showForm"
-            @update:open="showForm = $event"
-            class="max-w-2xl max-h-[90vh]"
-        >
-            <div class="space-y-6 flex flex-col max-h-[calc(90vh-3rem)]">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2 class="text-lg font-semibold">
-                            {{ selectedProduk ? 'Edit Product' : 'Create Product' }}
-                        </h2>
-                        <p class="text-sm text-muted-foreground">
-                            {{
-                                selectedProduk
-                                    ? 'Update product information'
-                                    : 'Add a new product to your catalog'
-                            }}
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-2 -mr-2 -mt-2">
-                        <div
-                            class="flex items-center gap-1 rounded-lg border bg-muted p-1"
-                        >
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-7 w-7"
-                                :class="
-                                    viewMode === 'sheet'
-                                        ? 'bg-background shadow-sm'
-                                        : 'hover:bg-transparent'
-                                "
-                                @click="toggleViewMode('sheet')"
-                                title="Slide Canvas Mode"
-                            >
-                                <LayoutPanelLeft class="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-7 w-7"
-                                :class="
-                                    viewMode === 'modal'
-                                        ? 'bg-background shadow-sm'
-                                        : 'hover:bg-transparent'
-                                "
-                                @click="toggleViewMode('modal')"
-                                title="Modal/Popup Mode"
-                            >
-                                <Maximize2 class="h-3.5 w-3.5" />
-                            </Button>
-                        </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            class="shrink-0"
-                            @click="closeForm"
-                            title="Close"
-                        >
-                            <X class="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-
-                <form
-                    @submit.prevent="submitForm"
-                    class="space-y-4 overflow-y-auto pr-2"
-                >
-                    <FormField label="Product Name" name="nama_produk" required>
-                        <Input
-                            v-model="form.nama_produk"
-                            placeholder="Enter product name"
-                        />
-                        <p
-                            v-if="form.errors.nama_produk"
-                            class="text-sm text-red-500"
-                        >
-                            {{ form.errors.nama_produk }}
-                        </p>
-                    </FormField>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <FormField label="Brand" name="brand_id" required>
-                            <RelationSelect
-                                v-model="form.brand_id"
-                                :options="brandOptions"
-                                placeholder="Select brand..."
-                                search-placeholder="Search brand..."
-                                empty-message="No brands found"
-                                icon="building"
-                                :clearable="true"
-                                :enable-create="true"
-                                create-label="Create brand"
-                                @create="openCreateBrandModal"
-                            />
-                        </FormField>
-
-                        <FormField label="Category" name="kategori_id" required>
-                            <RelationSelect
-                                v-model="form.kategori_id"
-                                :options="kategoriOptions"
-                                placeholder="Select category..."
-                                search-placeholder="Search category..."
-                                empty-message="No categories found"
-                                icon="tag"
-                                :clearable="true"
-                                :enable-create="true"
-                                create-label="Create category"
-                                @create="openCreateKategoriModal"
-                            />
-                        </FormField>
-                    </div>
-
-                    <FormField label="SKU" name="sku">
-                        <Input v-model="form.sku" placeholder="Auto-generated if empty" />
-                        <p v-if="form.errors.sku" class="text-sm text-red-500">
-                            {{ form.errors.sku }}
-                        </p>
-                    </FormField>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <FormField label="Serial Number" name="sn">
-                            <Input v-model="form.sn" placeholder="SN (optional)" />
-                        </FormField>
-
-                        <FormField label="Warranty" name="garansi">
-                            <Input v-model="form.garansi" placeholder="Warranty period" />
-                        </FormField>
-                    </div>
-
-                    <FormField label="Weight (gram)" name="berat">
-                        <Input
-                            v-model.number="form.berat"
-                            type="number"
-                            min="0"
-                            placeholder="Weight in grams"
-                        />
-                    </FormField>
-
-                    <div class="grid grid-cols-3 gap-4">
-                        <FormField label="Length (cm)" name="panjang">
-                            <Input v-model.number="form.panjang" type="number" min="0" />
-                        </FormField>
-                        <FormField label="Width (cm)" name="lebar">
-                            <Input v-model.number="form.lebar" type="number" min="0" />
-                        </FormField>
-                        <FormField label="Height (cm)" name="tinggi">
-                            <Input v-model.number="form.tinggi" type="number" min="0" />
-                        </FormField>
-                    </div>
-
-                    <FormField label="Description" name="deskripsi">
-                        <textarea
-                            v-model="form.deskripsi"
-                            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Product description"
-                            rows="3"
-                        ></textarea>
-                    </FormField>
-
-                    <FormField label="Product Images" name="images">
-                        <MultiImageUpload
-                            ref="imageUploadRef"
-                            v-model="selectedImageFiles"
-                            :produk-id="selectedProduk?.id"
-                            :existing-images="selectedProduk?.images || []"
-                            :max-images="10"
-                            @set-primary="handleSetPrimary"
-                            @delete="handleDeleteImage"
-                            @reorder="handleReorder"
-                        />
-                    </FormField>
-                </form>
-
-                <div class="flex justify-end gap-2 pt-4 border-t">
-                    <Button type="button" variant="outline" @click="closeForm">
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        :loading="form.processing"
-                        @click="submitForm"
-                    >
-                        {{ selectedProduk ? 'Update Product' : 'Create Product' }}
-                    </Button>
-                </div>
-            </div>
-        </Dialog>
+            </component>
+        </component>
 
         <Dialog
             :open="showDeleteModal"

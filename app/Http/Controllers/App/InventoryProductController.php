@@ -61,6 +61,9 @@ class InventoryProductController extends Controller
             'md_produk.lebar',
             'md_produk.tinggi',
             'md_produk.deskripsi',
+            'md_produk.tipe_produk',
+            'md_produk.is_sellable',
+            'md_produk.is_purchasable',
             DB::raw("({$stockSub}) as stok_on_hand"),
             DB::raw("({$valueSub}) as nilai_stok"),
             DB::raw("({$hppSub})  as avg_hpp"),
@@ -92,6 +95,12 @@ class InventoryProductController extends Controller
         // Category filter
         if ($kid = $request->kategori_id) {
             $query->where('kategori_id', $kid);
+        }
+
+        // Tipe Produk filter
+        $tpFilter = $request->get('tipe_produk');
+        if ($tpFilter && $tpFilter !== 'all') {
+            $query->where('tipe_produk', $tpFilter);
         }
 
         $perPage  = in_array((int) $request->per_page, [10, 25, 50, 100]) ? (int) $request->per_page : 10;

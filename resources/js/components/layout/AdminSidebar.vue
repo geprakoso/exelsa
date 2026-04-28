@@ -31,22 +31,6 @@ const props = defineProps<{
 
 const isMobileMenuOpen = ref(false)
 
-function getActiveSectionFromPath(path: string): string {
-    if (path.includes('/master-data')) return 'master-data'
-    if (path.includes('/transactions')) return 'transactions'
-    if (path.includes('/inventory')) return 'inventory'
-    if (path.includes('/akunting')) return 'akunting'
-    if (path.includes('/settings') || path.includes('/users')) return 'settings'
-    return 'dashboard'
-}
-
-const activeMainNav = ref(getActiveSectionFromPath(window.location.pathname))
-
-onMounted(() => {
-    router.on('navigate', (event) => {
-        activeMainNav.value = getActiveSectionFromPath(event.detail.page.url)
-    })
-})
 
 provide('mobileMenuOpen', isMobileMenuOpen)
 provide('toggleMobileMenu', () => {
@@ -118,6 +102,35 @@ const subNavigation: Record<string, NavItem[]> = {
         { label: 'Tax', icon: Package, href: '#' },
     ],
 }
+
+function getActiveSectionFromPath(path: string): string {
+    // First, check if the exact path or a subpath matches any item in subNavigation
+    for (const [section, items] of Object.entries(subNavigation)) {
+        for (const item of items) {
+            if (item.href && (path === item.href || path.startsWith(item.href + '/'))) {
+                return section
+            }
+        }
+    }
+    
+    // Fallbacks if not found explicitly in subNavigation
+    if (path.includes('/master-data')) return 'master-data'
+    if (path.includes('/transactions')) return 'transactions'
+    if (path.includes('/inventory')) return 'inventory'
+    if (path.includes('/akunting')) return 'akunting'
+    if (path.includes('/settings') || path.includes('/users')) return 'settings'
+    return 'dashboard'
+}
+
+const activeMainNav = ref(getActiveSectionFromPath(window.location.pathname))
+
+onMounted(() => {
+    router.on('navigate', (event) => {
+        // use event.detail.page.url which might be just pathname or include query params. We want pathname.
+        const url = new URL(event.detail.page.url, window.location.origin)
+        activeMainNav.value = getActiveSectionFromPath(url.pathname)
+    })
+})
 
 function setActiveMainNav(id: string) {
     activeMainNav.value = id

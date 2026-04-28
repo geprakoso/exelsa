@@ -48,6 +48,9 @@ class ProdukController extends Controller
     {
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
+            'tipe_produk' => 'required|in:physical,service',
+            'is_sellable' => 'boolean',
+            'is_purchasable' => 'boolean',
             'kategori_id' => 'nullable|exists:md_kategori,id',
             'brand_id' => 'nullable|exists:md_brand,id',
             'sku' => 'nullable|string|max:255|unique:md_produk,sku',
@@ -78,6 +81,9 @@ class ProdukController extends Controller
     {
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
+            'tipe_produk' => 'required|in:physical,service',
+            'is_sellable' => 'boolean',
+            'is_purchasable' => 'boolean',
             'kategori_id' => 'nullable|exists:md_kategori,id',
             'brand_id' => 'nullable|exists:md_brand,id',
             'sku' => 'required|string|max:255|unique:md_produk,sku,' . $produk->id,

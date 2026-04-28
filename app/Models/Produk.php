@@ -20,6 +20,9 @@ class Produk extends Model
 
     protected $fillable = [
         'nama_produk',
+        'tipe_produk',
+        'is_sellable',
+        'is_purchasable',
         'kategori_id',
         'brand_id',
         'sku',
@@ -35,6 +38,8 @@ class Produk extends Model
     ];
 
     protected $casts = [
+        'is_sellable' => 'boolean',
+        'is_purchasable' => 'boolean',
         'berat' => 'decimal:2',
         'panjang' => 'decimal:2',
         'lebar' => 'decimal:2',
