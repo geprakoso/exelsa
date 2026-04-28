@@ -25,11 +25,13 @@ interface Props {
   produkId?: number
   existingImages?: ProdukImage[]
   maxImages?: number
+  modelValue?: File[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   maxImages: 10,
-  existingImages: () => []
+  existingImages: () => [],
+  modelValue: () => []
 })
 
 const emit = defineEmits<{
@@ -40,11 +42,27 @@ const emit = defineEmits<{
 }>()
 
 // State
-const selectedFiles = ref<File[]>([])
+const selectedFiles = ref<File[]>([...props.modelValue])
 const previews = ref<{ file: File; url: string; progress: number; status: 'pending' | 'uploading' | 'completed' | 'error' }[]>([])
 const dragCounter = ref(0)
 const isDragging = computed(() => dragCounter.value > 0)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+
+// Generate previews for initially provided files (e.g. when switching views)
+if (selectedFiles.value.length > 0) {
+  selectedFiles.value.forEach(file => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previews.value.push({
+        file,
+        url: e.target?.result as string,
+        progress: 100,
+        status: 'completed'
+      })
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
 // Drag & Drop for existing images
 const [parentRef, orderedImages] = useDragAndDrop(props.existingImages, {

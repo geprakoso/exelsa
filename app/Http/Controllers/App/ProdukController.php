@@ -71,7 +71,7 @@ class ProdukController extends Controller
             $uploadService->uploadMultiple($request->file('images'), $produk->id);
         }
 
-        return redirect()->route('app.produk')->with('success', 'Produk berhasil dibuat');
+        return redirect()->back()->with('success', 'Produk berhasil dibuat');
     }
 
     public function update(Request $request, Produk $produk, ImageUploadService $uploadService)
@@ -103,7 +103,7 @@ class ProdukController extends Controller
             }
         }
 
-        return redirect()->route('app.produk')->with('success', 'Product updated successfully');
+        return redirect()->back()->with('success', 'Product updated successfully');
     }
 
     public function destroy(Produk $produk)
