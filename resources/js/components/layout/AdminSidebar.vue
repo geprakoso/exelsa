@@ -55,10 +55,13 @@ provide('toggleMobileMenu', () => {
 
 const mainNavigation = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/app/dashboard' },
-    { id: 'master-data', label: 'Master Data', icon: Package },
-    { id: 'transactions', label: 'Transaksi', icon: ShoppingCart },
+    { id: 'penjualan', label: 'Sales', icon: Package, href: '/app/admin/penjualan' },
+    { id: 'pembelian', label: 'Purchase', icon: Package, href: '/app/admin/pembelian' },
     { id: 'inventory', label: 'Inventory', icon: Package },
+    { id: 'catalog', label: 'Catalog', icon: Package },
     { id: 'akunting', label: 'Akunting', icon: FileText },
+    { id: 'finances', label: 'Finances', icon: FileText },
+    { id: 'user-management', label: 'User Management', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
@@ -66,34 +69,53 @@ const subNavigation: Record<string, NavItem[]> = {
     'dashboard': [
         { label: 'Overview', icon: BarChart3, href: '/app/dashboard' },
     ],
-    'master-data': [
-        { label: 'Produk', icon: Package, href: '/app/admin/master-data/produk' },
-        { label: 'Brand', icon: Package, href: '/app/admin/master-data/brand' },
-        { label: 'Kategori', icon: Package, href: '/app/admin/master-data/kategori' },
-        { label: 'Supplier', icon: Package, href: '/app/admin/master-data/supplier' },
-        { label: 'Member', icon: Users, href: '/app/admin/master-data/member' },
-        { label: 'Jasa', icon: Package, href: '/app/admin/master-data/jasa' },
-        { label: 'Gudang', icon: Package, href: '/app/admin/master-data/gudang' },
-        { label: 'Akun Transaksi', icon: FileText, href: '/app/admin/master-data/akun-transaksi' },
+//    'master-data': [
+//        { label: 'Produk', icon: Package, href: '/app/admin/master-data/produk' }, // Penambahan produk akan dilebur ke inventory
+//        { label: 'Jasa', icon: Package, href: '/app/admin/master-data/jasa' }, // Jasa akan dilbeur sebagai produk ( produk fisik, jasa)
+//    ],
+    'penjualan': [
+        { label: 'Sales Order', icon: ShoppingCart, href: '/app/admin/transactions/penjualan' },
+        { label: 'Trade-In', icon: ShoppingCart, href: '/app/admin/transactions/tukar-tambah' },
+        { label: 'Customer', icon: Users, href: '/app/admin/master-data/member' },
+        { label: 'Sales Return', icon: Users, href: '#' },
     ],
-    'transactions': [
-        { label: 'Penjualan', icon: ShoppingCart, href: '/app/admin/transactions/penjualan' },
-        { label: 'Pembelian', icon: ShoppingCart, href: '/app/admin/transactions/pembelian' },
-        { label: 'Tukar Tambah', icon: ShoppingCart, href: '/app/admin/transactions/tukar-tambah' },
+    'pembelian': [
+        { label: 'Purchasing Order', icon: ShoppingCart, href: '/app/admin/transactions/pembelian' },
+        { label: 'Supplier', icon: Package, href: '/app/admin/master-data/supplier' },
+        { label: 'Purchasing Return', icon: Package, href: '#' },
     ],
     'inventory': [
+        { label: 'Products', icon: Package, href: '/app/admin/inventory/products' },
+        { label: 'Brand', icon: Package, href: '/app/admin/master-data/brand' },
+        { label: 'Kategori', icon: Package, href: '/app/admin/master-data/kategori' },
+        { label: 'Warehouse', icon: Package, href: '/app/admin/master-data/gudang' },
         { label: 'Stock Adjustment', icon: Package, href: '/app/admin/inventory/stock-adjustment' },
         { label: 'Stock Opname', icon: Package, href: '/app/admin/inventory/stock-opname' },
+        { label: 'Stock Movement', icon: Package, href: '#' },
     ],
     'akunting': [
         { label: 'Chart of Accounts', icon: FileText, href: '/app/akunting/chart-of-accounts' },
-        { label: 'Input Transaksi', icon: FileText, href: '/app/akunting/input-transaksi' },
-        { label: 'Laporan Laba Rugi', icon: BarChart3, href: '/app/akunting/laporan-laba-rugi' },
+        { label: 'Journal Entries', icon: FileText, href: '/app/akunting/input-transaksi' },
+        { label: 'Profit & Loss', icon: BarChart3, href: '/app/akunting/laporan-laba-rugi' },
+        { label: 'Balance Sheet', icon: BarChart3, href: '#' },
+        { label: 'Cash & Bank', icon: FileText, href: '#' },
+        { label: 'Expenses', icon: FileText, href: '#' },
         { label: 'Laporan Neraca', icon: BarChart3, href: '/app/akunting/laporan-neraca' },
     ],
+    'finances': [
+        { label: 'Invoices', icon: FileText, href: '#' },
+        { label: 'Payments', icon: FileText, href: '#' },
+        { label: 'Receivable', icon: FileText, href: '#' },
+        { label: 'Payable', icon: FileText, href: '#' },
+    ],
+    'user-management': [
+        { label: 'Users', icon: Users, href: '/app/admin/users'},
+        { label: 'Roles & Permissions', icon: Users, href: '#'}
+    ],
     'settings': [
-        { label: 'Users', icon: Users, href: '/app/admin/users' },
         { label: 'Settings', icon: Settings, href: '/app/settings' },
+        { label: 'Company Profile', icon: Package, href: '#' },
+        { label: 'Tax', icon: Package, href: '#' },
     ],
 }
 

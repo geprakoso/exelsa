@@ -82,19 +82,23 @@ class Pembelian extends Model
 
     public static function generatePO(): string
     {
-        $date = now()->format('Ym');
-        $prefix = 'PO-' . $date . '-';
+        return \Illuminate\Support\Facades\DB::transaction(function () {
+            $date = now()->format('Ym');
+            $prefix = 'PO-' . $date . '-';
 
-        $latest = self::where('no_po', 'like', $prefix . '%')
-            ->orderBy('no_po', 'desc')
-            ->first();
+            $latest = self::withTrashed()
+                ->where('no_po', 'like', $prefix . '%')
+                ->orderBy('no_po', 'desc')
+                ->lockForUpdate()
+                ->first();
 
-        $next = 1;
-        if ($latest && preg_match('/' . preg_quote($prefix, '/') . '(\d+)$/', $latest->no_po, $m)) {
-            $next = (int) $m[1] + 1;
-        }
+            $next = 1;
+            if ($latest && preg_match('/' . preg_quote($prefix, '/') . '(\d+)$/', $latest->no_po, $m)) {
+                $next = (int) $m[1] + 1;
+            }
 
-        return $prefix . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+            return $prefix . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        });
     }
 
     protected $casts = [

@@ -9,6 +9,9 @@ use App\Http\Controllers\App\GudangController;
 use App\Http\Controllers\App\JasaController;
 use App\Http\Controllers\App\MemberController;
 use App\Http\Controllers\App\ProdukController;
+use App\Http\Controllers\App\InventoryProductController;
+use App\Http\Controllers\App\StockAdjustmentController;
+use App\Http\Controllers\App\StockOpnameController;
 use App\Http\Controllers\App\SupplierController;
 use App\Http\Controllers\App\UserController;
 use Filament\Facades\Filament;
@@ -115,8 +118,26 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         });
         
         Route::prefix('inventory')->group(function () {
-            Route::get('/stock-adjustment', function () { return Inertia::render('app/admin/inventory/stock-adjustment/Index'); })->name('app.stock-adjustment');
-            Route::get('/stock-opname', function () { return Inertia::render('app/admin/inventory/stock-opname/Index'); })->name('app.stock-opname');
+            // Inventory Products
+            Route::get('/products', [InventoryProductController::class, 'index'])->name('app.inventory.products');
+            // Stock Adjustment
+            Route::get('/stock-adjustment/create', [StockAdjustmentController::class, 'create'])->name('app.stock-adjustment.create');
+            Route::post('/stock-adjustment', [StockAdjustmentController::class, 'store'])->name('app.stock-adjustment.store');
+            Route::get('/stock-adjustment/{stockAdjustment}/edit', [StockAdjustmentController::class, 'edit'])->name('app.stock-adjustment.edit');
+            Route::put('/stock-adjustment/{stockAdjustment}', [StockAdjustmentController::class, 'update'])->name('app.stock-adjustment.update');
+            Route::delete('/stock-adjustment/{stockAdjustment}', [StockAdjustmentController::class, 'destroy'])->name('app.stock-adjustment.destroy');
+            Route::post('/stock-adjustment/{stockAdjustment}/post', [StockAdjustmentController::class, 'post'])->name('app.stock-adjustment.post');
+            Route::get('/stock-adjustment/{stockAdjustment}', [StockAdjustmentController::class, 'show'])->name('app.stock-adjustment.show');
+            Route::get('/stock-adjustment', [StockAdjustmentController::class, 'index'])->name('app.stock-adjustment');
+            // Stock Opname
+            Route::get('/stock-opname/create', [StockOpnameController::class, 'create'])->name('app.stock-opname.create');
+            Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('app.stock-opname.store');
+            Route::get('/stock-opname/{stockOpname}/edit', [StockOpnameController::class, 'edit'])->name('app.stock-opname.edit');
+            Route::put('/stock-opname/{stockOpname}', [StockOpnameController::class, 'update'])->name('app.stock-opname.update');
+            Route::delete('/stock-opname/{stockOpname}', [StockOpnameController::class, 'destroy'])->name('app.stock-opname.destroy');
+            Route::post('/stock-opname/{stockOpname}/post', [StockOpnameController::class, 'post'])->name('app.stock-opname.post');
+            Route::get('/stock-opname/{stockOpname}', [StockOpnameController::class, 'show'])->name('app.stock-opname.show');
+            Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('app.stock-opname');
         });
     });
     
