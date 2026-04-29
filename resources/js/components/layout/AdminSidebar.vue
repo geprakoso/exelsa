@@ -4,6 +4,8 @@ import { Link, router } from '@inertiajs/vue3'
 import { cn } from '@/lib/utils'
 import {
     Users,
+    ShieldCheck,
+    KeyRound,
     Package,
     ShoppingCart,
     FileText,
@@ -94,7 +96,8 @@ const subNavigation: Record<string, NavItem[]> = {
     ],
     'user-management': [
         { label: 'Users', icon: Users, href: '/app/admin/users'},
-        { label: 'Roles & Permissions', icon: Users, href: '#'}
+        { label: 'Roles', icon: ShieldCheck, href: '/app/admin/roles' },
+        { label: 'Permissions', icon: KeyRound, href: '/app/admin/permissions' },
     ],
     'settings': [
         { label: 'Settings', icon: Settings, href: '/app/settings' },

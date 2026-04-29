@@ -14,6 +14,8 @@ use App\Http\Controllers\App\StockAdjustmentController;
 use App\Http\Controllers\App\StockOpnameController;
 use App\Http\Controllers\App\SupplierController;
 use App\Http\Controllers\App\UserController;
+use App\Http\Controllers\App\RoleController;
+use App\Http\Controllers\App\PermissionController;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -72,6 +74,16 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::post('/users', [UserController::class, 'store'])->name('app.users.store');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('app.users.update');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('app.users.destroy');
+
+        Route::get('/roles', [RoleController::class, 'index'])->name('app.roles');
+        Route::post('/roles', [RoleController::class, 'store'])->name('app.roles.store');
+        Route::put('/roles/{role}', [RoleController::class, 'update'])->name('app.roles.update');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('app.roles.destroy');
+
+        Route::get('/permissions', [PermissionController::class, 'index'])->name('app.permissions');
+        Route::post('/permissions', [PermissionController::class, 'store'])->name('app.permissions.store');
+        Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('app.permissions.update');
+        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('app.permissions.destroy');
         
         Route::prefix('master-data')->group(function () {
             Route::get('/produk/search', [ProdukController::class, 'search'])->name('app.produk.search');

@@ -13,9 +13,18 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('roles')->paginate(15);
+        $items = collect($users->items())->map(function (User $user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'created_at' => $user->created_at,
+                'roles' => $user->roles->pluck('name')->values()->all(),
+            ];
+        })->values()->all();
         
         return Inertia::render('app/admin/users/Index', [
-            'users' => $users->items(),
+            'users' => $items,
             'user' => auth()->user(),
         ]);
     }

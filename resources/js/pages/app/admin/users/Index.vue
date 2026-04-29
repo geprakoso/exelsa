@@ -177,7 +177,7 @@ const roleOptions = [
                     
                     <template #cell:roles="{ row }">
                         <div class="flex gap-1">
-                            <Badge v-for="role in row.original.roles" :key="role" variant="secondary">
+                            <Badge v-for="role in row.roles" :key="role" variant="secondary">
                                 {{ role }}
                             </Badge>
                         </div>
@@ -191,14 +191,14 @@ const roleOptions = [
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem @click.stop="openEditModal(row.original)">
+                                <DropdownMenuItem @click.stop="openEditModal(row)">
                                     <Pencil class="mr-2 h-4 w-4" />
                                     Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     variant="destructive"
-                                    @click.stop="openDeleteModal(row.original)"
+                                    @click.stop="openDeleteModal(row)"
                                 >
                                     <Trash2 class="mr-2 h-4 w-4" />
                                     Delete
