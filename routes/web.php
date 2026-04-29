@@ -76,6 +76,7 @@ Route::prefix('app')->middleware(['auth'])->group(function () {
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('app.users.destroy');
 
         Route::get('/roles', [RoleController::class, 'index'])->name('app.roles');
+        Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('app.roles.edit');
         Route::post('/roles', [RoleController::class, 'store'])->name('app.roles.store');
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('app.roles.update');
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('app.roles.destroy');

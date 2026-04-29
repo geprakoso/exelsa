@@ -18,6 +18,7 @@ node_modules
 # /public/build  ← SENGAJA TIDAK DI-IGNORE agar hasil build bisa di-pull ke VPS
 /public/hot
 /public/storage
+/public/build/assets
 /storage/*.key
 /storage/pail
 /storage/debugbar
