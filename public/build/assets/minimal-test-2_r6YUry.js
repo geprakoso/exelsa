@@ -1,1 +1,0 @@
-import{d as t,b as s,l as o,t as a,j as n,o as l}from"./app-DdF5HY3m.js";/* empty css                */const c={class:"p-8"},r={class:"text-2xl font-bold"},f=t({__name:"minimal-test",setup(i){const e=n("Hello from minimal Vue!");return(m,_)=>(l(),s("div",c,[o("h1",r,a(e.value),1)]))}});export{f as default};
