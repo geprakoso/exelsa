@@ -13,7 +13,7 @@
     $totalPenjualan = $totalPenjualan ?? collect($resolvedRows)->sum(function ($row): float {
         $produkTotal = (float) $row->items->sum(function ($item): float {
             $qty = (int) ($item->qty ?? 0);
-            $harga = (float) ($item->harga_jual ?? 0);
+            $harga = (float) ($item->selling_price ?? 0);
 
             return $harga * $qty;
         });
@@ -44,7 +44,7 @@
                     $url = \App\Filament\Resources\PenjualanResource::getUrl('view', ['record' => $row]);
                     $produkTotal = (float) $row->items->sum(function ($item): float {
                         $qty = (int) ($item->qty ?? 0);
-                        $harga = (float) ($item->harga_jual ?? 0);
+                        $harga = (float) ($item->selling_price ?? 0);
 
                         return $harga * $qty;
                     });

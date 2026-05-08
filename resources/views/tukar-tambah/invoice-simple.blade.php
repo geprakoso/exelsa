@@ -70,7 +70,7 @@
         }
 
         $qty = (float) ($item->qty ?? 0);
-        $unit = (float) ($item->harga_jual ?? 0);
+        $unit = (float) ($item->selling_price ?? 0);
         $rowsPenjualan->push([
             'desc' => $desc,
             'qty' => $qty,
@@ -94,7 +94,7 @@
     foreach ($purchaseItems as $item) {
         $name = $item->produk?->nama_produk ?? 'Produk';
         $qty = (float) ($item->qty ?? 0);
-        $unit = (float) ($item->hpp ?? 0);
+        $unit = (float) ($item->cost_price ?? 0);
         $rowsPembelian->push([
             'desc' => $name,
             'qty' => $qty,

@@ -216,13 +216,13 @@ class StockOpnameController extends Controller
             ->get()
             ->map(function ($p) use ($qtySisaCol, $fkCol) {
                 $batches = PembelianItem::where($fkCol, $p->id)
-                    ->select(['id_pembelian_item', $qtySisaCol, 'hpp', 'kondisi'])
+                    ->select(['id_pembelian_item', $qtySisaCol, 'cost_price', 'kondisi'])
                     ->with('pembelian:id_pembelian,no_po')
                     ->get()
                     ->map(fn ($b) => [
                         'id'          => $b->id_pembelian_item,
                         'qty_sisa'    => (int) ($b->{$qtySisaCol} ?? 0),
-                        'hpp'         => (float) $b->hpp,
+                        'cost_price'  => (float) $b->cost_price,
                         'kondisi'     => $b->kondisi,
                         'no_po'       => $b->pembelian?->no_po,
                     ]);

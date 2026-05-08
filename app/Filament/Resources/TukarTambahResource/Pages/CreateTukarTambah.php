@@ -174,7 +174,7 @@ class CreateTukarTambah extends CreateRecord
                 continue;
             }
 
-            $customPrice = $item['harga_jual'] ?? null;
+            $customPrice = $item['selling_price'] ?? null;
             $customPrice = ($customPrice === '' || $customPrice === null) ? null : (int) $customPrice;
             $condition = $item['kondisi'] ?? null;
             $serials = is_array($item['serials'] ?? null) ? array_values($item['serials']) : [];
@@ -242,7 +242,7 @@ class CreateTukarTambah extends CreateRecord
                 'id_produk' => $productId,
                 'id_pembelian_item' => $batch->getKey(),
                 'qty' => $takeQty,
-                'harga_jual' => $customPrice,
+                'selling_price' => $customPrice,
                 'kondisi' => $condition,
                 'serials' => empty($takeSerials) ? null : $takeSerials,
             ]);
@@ -276,8 +276,8 @@ class CreateTukarTambah extends CreateRecord
                 'id_pembelian' => $pembelian->getKey(),
                 $productColumn => $productId,
                 'qty' => $qty,
-                'hpp' => (int) ($item['hpp'] ?? 0),
-                'harga_jual' => (int) ($item['harga_jual'] ?? 0),
+                'cost_price' => (int) ($item['cost_price'] ?? 0),
+                'selling_price' => (int) ($item['selling_price'] ?? 0),
                 'kondisi' => $item['kondisi'] ?? 'baru',
             ];
 

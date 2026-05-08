@@ -136,9 +136,9 @@ class EditTukarTambah extends EditRecord
                 'catatan' => $penjualan->catatan,
                 'items' => $penjualan->items
                     ->map(function (PenjualanItem $item): array {
-                        $hargaJual = $item->harga_jual;
-                        if ($hargaJual === null) {
-                            $hargaJual = $item->pembelianItem?->harga_jual;
+                        $sellingPrice = $item->selling_price;
+                        if ($sellingPrice === null) {
+                            $sellingPrice = $item->pembelianItem?->selling_price;
                         }
 
                         $kondisi = $item->kondisi ?? $item->pembelianItem?->kondisi;
@@ -147,10 +147,10 @@ class EditTukarTambah extends EditRecord
                         return [
                             'id_produk' => $item->id_produk,
                             'id_pembelian_item' => $item->id_pembelian_item, // Added
-                            'hpp' => (int) ($item->hpp ?? 0), // Added
+                            'cost_price' => (int) ($item->cost_price ?? 0), // Added
                             'kondisi' => $kondisi,
                             'qty' => (int) ($item->qty ?? 0),
-                            'harga_jual' => $hargaJual === null ? null : (int) $hargaJual,
+                            'selling_price' => $sellingPrice === null ? null : (int) $sellingPrice,
                             'serials' => $serials,
                         ];
                     })
@@ -192,8 +192,8 @@ class EditTukarTambah extends EditRecord
                             'id_produk' => $item->{$productColumn},
                             'kondisi' => $item->kondisi ?? 'baru',
                             'qty' => (int) ($item->qty ?? 0),
-                            'hpp' => (int) ($item->hpp ?? 0),
-                            'harga_jual' => (int) ($item->harga_jual ?? 0),
+                            'cost_price' => (int) ($item->cost_price ?? 0),
+                            'selling_price' => (int) ($item->selling_price ?? 0),
                         ];
                     })
                     ->values()
@@ -392,7 +392,7 @@ class EditTukarTambah extends EditRecord
                 continue;
             }
 
-            $customPrice = $item['harga_jual'] ?? null;
+            $customPrice = $item['selling_price'] ?? null;
             $customPrice = ($customPrice === '' || $customPrice === null) ? null : (int) $customPrice;
             $condition = $item['kondisi'] ?? null;
             $serials = is_array($item['serials'] ?? null) ? array_values($item['serials']) : [];
@@ -460,7 +460,7 @@ class EditTukarTambah extends EditRecord
                 'id_produk' => $productId,
                 'id_pembelian_item' => $batch->getKey(),
                 'qty' => $takeQty,
-                'harga_jual' => $customPrice,
+                'selling_price' => $customPrice,
                 'kondisi' => $condition,
                 'serials' => empty($takeSerials) ? null : $takeSerials,
             ]);
@@ -494,8 +494,8 @@ class EditTukarTambah extends EditRecord
                 'id_pembelian' => $pembelian->getKey(),
                 $productColumn => $productId,
                 'qty' => $qty,
-                'hpp' => (int) ($item['hpp'] ?? 0),
-                'harga_jual' => (int) ($item['harga_jual'] ?? 0),
+                'cost_price' => (int) ($item['cost_price'] ?? 0),
+                'selling_price' => (int) ($item['selling_price'] ?? 0),
                 'kondisi' => $item['kondisi'] ?? 'baru',
             ];
 

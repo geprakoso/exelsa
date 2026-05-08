@@ -17,10 +17,10 @@ class CheckoutPosAction
      * Jalankan checkout POS sederhana berbasis inventory + batch.
      *
      * @param  array{
-     *     items: array<int, array{
-     *         id_produk:int,
-     *         qty:int,
-     *         harga_jual?:numeric,
+*     items: array<int, array{
+ *         id_produk:int,
+ *         qty:int,
+ *         selling_price?:numeric,
      *         kondisi?:string
      *     }>,
      *     services?: array<int, array{
@@ -79,15 +79,15 @@ class CheckoutPosAction
                     ]);
                 }
 
-                $hargaJual = Arr::get($itemData, 'harga_jual');
-                $hargaJual = ($hargaJual === '' || is_null($hargaJual)) ? null : (int) $hargaJual;
+                $sellingPrice = Arr::get($itemData, 'selling_price');
+                $sellingPrice = ($sellingPrice === '' || is_null($sellingPrice)) ? null : (int) $sellingPrice;
                 $kondisi = Arr::get($itemData, 'kondisi');
 
                 $lineTotal = $this->fulfillItemUsingFifo(
                     penjualan: $penjualan,
                     productId: (int) $produkId,
                     qty: $qty,
-                    customPrice: $hargaJual,
+                    customPrice: $sellingPrice,
                     kondisi: $kondisi,
                     itemIndex: $index,
                 );
@@ -181,14 +181,14 @@ class CheckoutPosAction
             }
 
             $takeQty = min($remaining, $batchAvailable);
-            $unitPrice = $customPrice ?? (int) $batch->harga_jual;
+            $unitPrice = $customPrice ?? (int) $batch->selling_price;
 
             PenjualanItem::query()->create([
                 'id_penjualan' => $penjualan->getKey(),
                 'id_produk' => $productId,
                 'id_pembelian_item' => $batch->getKey(),
                 'qty' => $takeQty,
-                'harga_jual' => $customPrice,
+                'selling_price' => $customPrice,
                 'kondisi' => $kondisi,
             ]);
 

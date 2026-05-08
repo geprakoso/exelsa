@@ -55,7 +55,7 @@ class LabaRugiPembelianTable extends Component
                 ->whereHas('pembelian', fn ($query) => $query->whereBetween('tanggal', [$start, $end]))
                 ->whereHas('penjualanItems')
                 ->join('tb_penjualan_item', 'tb_pembelian_item.id_pembelian_item', '=', 'tb_penjualan_item.id_pembelian_item')
-                ->selectRaw('SUM(tb_pembelian_item.hpp * tb_penjualan_item.qty) as total')
+                ->selectRaw('SUM(tb_pembelian_item.cost_price * tb_penjualan_item.qty) as total')
                 ->value('total') ?? 0;
 
             return (float) $total;

@@ -127,18 +127,18 @@ class InventoryResource extends BaseResource
                         ]),
                     ])->space(2),
                     Stack::make([
-                        TextColumn::make('latest_batch.hpp')
-                            ->label('HPP')
+                        TextColumn::make('latest_batch.cost_price')
+                            ->label('Cost Price')
                             ->weight('bold')
-                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['hpp'] ?? null)
+                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['cost_price'] ?? null)
                             ->formatStateUsing(fn($state) => is_null($state) ? '-' : self::formatCurrency($state))
                             ->alignEnd()
                             ->size(TextColumnSize::Large)
                             ->icon('heroicon-o-currency-dollar')
                             ->color('gray'),
-                        TextColumn::make('latest_batch.harga_jual')
+                        TextColumn::make('latest_batch.selling_price')
                             ->label('Harga Jual Terkini')
-                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['harga_jual'] ?? null)
+                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['selling_price'] ?? null)
                             ->formatStateUsing(fn($state) => is_null($state) ? '-' : self::formatCurrency($state))
                             ->weight('bold')
                             ->size(TextColumnSize::Large)
@@ -182,12 +182,12 @@ class InventoryResource extends BaseResource
                         TextColumn::make('total_qty')
                             ->label('Stok Sistem')
                             ->state(fn(Produk $record) => (int) ($record->total_qty ?? 0)),
-                        TextColumn::make('latest_batch.hpp')
-                            ->label('HPP Terkini')
-                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['hpp'] ?? null),
-                        TextColumn::make('latest_batch.harga_jual')
+                        TextColumn::make('latest_batch.cost_price')
+                            ->label('Cost Price Terkini')
+                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['cost_price'] ?? null),
+                        TextColumn::make('latest_batch.selling_price')
                             ->label('Harga Jual Terkini')
-                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['harga_jual'] ?? null),
+                            ->state(fn(Produk $record) => self::getInventorySnapshot($record)['latest_batch']['selling_price'] ?? null),
                         TextColumn::make('stok_opname')
                             ->label('Stok Opname')
                             ->state(fn() => null),
@@ -363,8 +363,8 @@ class InventoryResource extends BaseResource
      * Snapshot meliputi:
      * - total qty saat ini
      * - jumlah batch aktif
-     * - detail setiap batch (no_po, tanggal, qty, hpp, harga_jual, kondisi)
-     * - informasi batch terbaru (hpp, harga_jual, tanggal)
+     * - detail setiap batch (no_po, tanggal, qty, cost_price, selling_price, kondisi)
+     * - informasi batch terbaru (cost_price, selling_price, tanggal)
      *
      * Hasil disimpan dalam cache statis agar tidak perlu menghitung ulang
      * dalam satu siklus request yang sama.
@@ -407,21 +407,21 @@ class InventoryResource extends BaseResource
             $tanggal = $purchase && $purchase->tanggal
                 ? $purchase->tanggal->format('d M Y')
                 : '-';
-            $rawHpp = $item->hpp;
+            $rawCostPrice = $item->cost_price;
 
-            $rawHargaJual = $item->harga_jual;
-            $hpp = is_null($rawHpp) ? null : (int) $rawHpp;
-            $hargaJual = is_null($rawHargaJual) ? null : (int) $rawHargaJual;
+            $rawSellingPrice = $item->selling_price;
+            $costPrice = is_null($rawCostPrice) ? null : (int) $rawCostPrice;
+            $sellingPrice = is_null($rawSellingPrice) ? null : (int) $rawSellingPrice;
 
             return [
                 'pembelian_id' => $purchase->id_pembelian ?? null,
                 'no_po' => $purchase->no_po ?? '-',
                 'tanggal' => $tanggal,
                 'qty' => (int) ($item->{$qtySisaColumn} ?? 0),
-                'hpp' => $hpp,
-                'harga_jual' => $hargaJual,
-                'hpp_display' => is_null($hpp) ? null : self::formatCurrency($hpp),
-                'harga_jual_display' => is_null($hargaJual) ? null : self::formatCurrency($hargaJual),
+                'cost_price' => $costPrice,
+                'selling_price' => $sellingPrice,
+                'cost_price_display' => is_null($costPrice) ? null : self::formatCurrency($costPrice),
+                'selling_price_display' => is_null($sellingPrice) ? null : self::formatCurrency($sellingPrice),
                 'kondisi' => ucfirst($item->kondisi ?? '-'),
             ];
         })->toArray();
@@ -430,12 +430,12 @@ class InventoryResource extends BaseResource
         $latestBatch = null;
 
         if ($latestBatchRecord) {
-            $latestHpp = $latestBatchRecord->hpp;
-            $latestHargaJual = $latestBatchRecord->harga_jual;
+            $latestCostPrice = $latestBatchRecord->cost_price;
+            $latestSellingPrice = $latestBatchRecord->selling_price;
 
             $latestBatch = [
-                'hpp' => is_null($latestHpp) ? null : (int) $latestHpp,
-                'harga_jual' => is_null($latestHargaJual) ? null : (int) $latestHargaJual,
+                'cost_price' => is_null($latestCostPrice) ? null : (int) $latestCostPrice,
+                'selling_price' => is_null($latestSellingPrice) ? null : (int) $latestSellingPrice,
                 'tanggal' => optional($latestBatchRecord->pembelian?->tanggal)->format('d M Y'),
             ];
         }
@@ -470,12 +470,12 @@ class InventoryResource extends BaseResource
                 'Qty: ' . self::formatNumber($batch['qty'] ?? 0),
             ];
 
-            if (! empty($batch['hpp'])) {
-                $segments[] = 'HPP: ' . self::formatCurrency($batch['hpp']);
+            if (! empty($batch['cost_price'])) {
+                $segments[] = 'Cost Price: ' . self::formatCurrency($batch['cost_price']);
             }
 
-            if (! empty($batch['harga_jual'])) {
-                $segments[] = 'Harga: ' . self::formatCurrency($batch['harga_jual']);
+            if (! empty($batch['selling_price'])) {
+                $segments[] = 'Harga: ' . self::formatCurrency($batch['selling_price']);
             }
 
             if (! empty($batch['kondisi']) && $batch['kondisi'] !== '-') {
@@ -506,17 +506,17 @@ class InventoryResource extends BaseResource
     {
         $totalProduk = $records->count();
         $totalStok = $records->sum(fn(Produk $record) => (int) ($record->total_qty ?? 0));
-        $totalHpp = 0;
-        $totalHargaJual = 0;
+        $totalCostPrice = 0;
+        $totalSellingPrice = 0;
 
         foreach ($records as $record) {
             $snapshot = self::getInventorySnapshot($record);
             $qty = (int) ($record->total_qty ?? 0);
-            $hpp = (int) ($snapshot['latest_batch']['hpp'] ?? 0);
-            $hargaJual = (int) ($snapshot['latest_batch']['harga_jual'] ?? 0);
+            $costPrice = (int) ($snapshot['latest_batch']['cost_price'] ?? 0);
+            $sellingPrice = (int) ($snapshot['latest_batch']['selling_price'] ?? 0);
 
-            $totalHpp += $qty * $hpp;
-            $totalHargaJual += $qty * $hargaJual;
+            $totalCostPrice += $qty * $costPrice;
+            $totalSellingPrice += $qty * $sellingPrice;
         }
 
         return [
@@ -529,12 +529,12 @@ class InventoryResource extends BaseResource
                 'value' => self::formatNumber($totalStok),
             ],
             [
-                'label' => 'Estimasi Nilai HPP',
-                'value' => self::formatCurrency($totalHpp),
+                'label' => 'Estimasi Nilai Cost Price',
+                'value' => self::formatCurrency($totalCostPrice),
             ],
             [
                 'label' => 'Estimasi Nilai Jual',
-                'value' => self::formatCurrency($totalHargaJual),
+                'value' => self::formatCurrency($totalSellingPrice),
             ],
         ];
     }

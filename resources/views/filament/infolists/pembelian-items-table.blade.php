@@ -10,7 +10,7 @@
         $resolvedRows = $resolvedRows->all();
     }
 
-    $totalHpp = $totalHpp ?? collect($resolvedRows)->sum(fn ($row) => (float) ($row->hpp ?? 0) * (int) ($row->qty_terjual ?? 0));
+    $totalCost = $totalCost ?? collect($resolvedRows)->sum(fn ($row) => (float) ($row->cost_price ?? 0) * (int) ($row->qty_terjual ?? 0));
 @endphp
 
 <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
@@ -20,7 +20,7 @@
                 <th class="w-56 px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Nama Produk</th>
                 <th class="w-24 px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Qty</th>
                 <th class="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Supplier</th>
-                <th class="w-32 px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">HPP</th>
+                <th class="w-32 px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Cost Price</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -50,7 +50,7 @@
                         {{ $pembelian?->supplier?->nama_supplier ?? '-' }}
                     </td>
                     <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100 dark:group-hover:!bg-gray-800/70">
-                        Rp {{ number_format((float) ($row->hpp ?? 0), 0, ',', '.') }}
+                        Rp {{ number_format((float) ($row->cost_price ?? 0), 0, ',', '.') }}
                     </td>
                 </tr>
             @empty
@@ -64,7 +64,7 @@
     </table>
     <div class="flex items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-4 py-3 text-sm dark:border-gray-700 dark:bg-gray-800">
         <span class="text-gray-600 dark:text-gray-200">Total Pembelian</span>
-        <span class="font-semibold text-gray-900 dark:text-gray-50">Rp {{ number_format($totalHpp, 0, ',', '.') }}</span>
+        <span class="font-semibold text-gray-900 dark:text-gray-50">Rp {{ number_format($totalCost, 0, ',', '.') }}</span>
     </div>
     @if ($rows instanceof \Illuminate\Pagination\LengthAwarePaginator && $rows->hasPages())
         <div class="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">

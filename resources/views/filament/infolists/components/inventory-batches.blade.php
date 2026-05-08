@@ -33,15 +33,15 @@
                     </dd>
                 </div>
                 <div class="space-y-1 min-w-[200px] flex-none">
-                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">HPP</dt>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Cost Price</dt>
                     <dd class="mt-1 text-base font-semibold text-gray-900 dark:text-white">
-                        {{ $batch['hpp_display'] ?? '-' }}
+                        {{ $batch['cost_price_display'] ?? '-' }}
                     </dd>
                 </div>
                 <div class="space-y-1 min-w-[200px] flex-none">
-                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Harga Jual</dt>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Selling Price</dt>
                     <dd class="mt-1 text-base font-semibold text-gray-900 dark:text-white">
-                        {{ $batch['harga_jual_display'] ?? '-' }}
+                        {{ $batch['selling_price_display'] ?? '-' }}
                     </dd>
                 </div>
                 <div class="space-y-1 min-w-[200px] flex-none">

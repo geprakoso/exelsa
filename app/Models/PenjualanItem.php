@@ -19,15 +19,15 @@ class PenjualanItem extends Model
         'id_produk',
         'id_pembelian_item',
         'qty',
-        'hpp',
-        'harga_jual',
+        'cost_price',
+        'selling_price',
         'kondisi',
         'serials',
     ];
 
     protected $casts = [
-        'hpp' => 'decimal:2',
-        'harga_jual' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
         'serials' => 'array',
     ];
 
@@ -149,12 +149,12 @@ class PenjualanItem extends Model
             return;
         }
 
-        // HPP selalu sinkron dengan batch agar laporan konsisten
-        $item->hpp = $batch->hpp;
+        // Cost price always synced with batch for consistent reporting
+        $item->cost_price = $batch->cost_price;
 
-        // Harga jual boleh diubah manual, hanya isi default jika belum diisi
-        if (is_null($item->harga_jual)) {
-            $item->harga_jual = $batch->harga_jual;
+        // Selling price can be overridden manually; only fill default if not set
+        if (is_null($item->selling_price)) {
+            $item->selling_price = $batch->selling_price;
         }
 
         // Kondisi otomatis mengikuti batch kecuali user memilih nilai khusus

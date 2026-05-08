@@ -60,8 +60,8 @@ describe('Inventory Resource - List', function () {
             'id_pembelian' => $pembelian->id_pembelian,
             'id_produk' => $produk->id,
             'qty' => 5,
-            'hpp' => 12000,
-            'harga_jual' => 20000,
+            'cost_price' => 12000,
+            'selling_price' => 20000,
             'kondisi' => 'baru',
         ]);
 
@@ -104,8 +104,8 @@ describe('Inventory Resource - List', function () {
             'id_pembelian' => $pembelianAktif->id_pembelian,
             'id_produk' => $produkAktif->id,
             'qty' => 5,
-            'hpp' => 12000,
-            'harga_jual' => 20000,
+            'cost_price' => 12000,
+            'selling_price' => 20000,
             'kondisi' => 'baru',
         ]);
 
@@ -113,8 +113,8 @@ describe('Inventory Resource - List', function () {
             'id_pembelian' => $pembelianHabis->id_pembelian,
             'id_produk' => $produkHabis->id,
             'qty' => 0,
-            'hpp' => 10000,
-            'harga_jual' => 18000,
+            'cost_price' => 10000,
+            'selling_price' => 18000,
             'kondisi' => 'baru',
         ]);
 
@@ -149,8 +149,8 @@ describe('Inventory Resource - Snapshot', function () {
             'id_pembelian' => $pembelianLama->id_pembelian,
             'id_produk' => $produk->id,
             'qty' => 3,
-            'hpp' => 11000,
-            'harga_jual' => 19000,
+            'cost_price' => 11000,
+            'selling_price' => 19000,
             'kondisi' => 'baru',
         ]);
 
@@ -158,8 +158,8 @@ describe('Inventory Resource - Snapshot', function () {
             'id_pembelian' => $pembelianBaru->id_pembelian,
             'id_produk' => $produk->id,
             'qty' => 7,
-            'hpp' => 12500,
-            'harga_jual' => 21000,
+            'cost_price' => 12500,
+            'selling_price' => 21000,
             'kondisi' => 'baru',
         ]);
 
@@ -171,8 +171,8 @@ describe('Inventory Resource - Snapshot', function () {
 
         expect($snapshot['qty'])->toBe(10);
         expect($snapshot['batch_count'])->toBe(2);
-        expect($snapshot['latest_batch']['hpp'])->toBe(12500);
-        expect($snapshot['latest_batch']['harga_jual'])->toBe(21000);
+        expect($snapshot['latest_batch']['cost_price'])->toBe(12500);
+        expect($snapshot['latest_batch']['selling_price'])->toBe(21000);
         expect($snapshot['latest_batch']['tanggal'])->toBe($pembelianBaru->tanggal->format('d M Y'));
     });
 });

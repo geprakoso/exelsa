@@ -55,7 +55,7 @@
     $company_name = data_get($data, 'company_name', '');
     $periode_label = data_get($data, 'periode_label', '-');
     $total_penjualan = data_get($data, 'total_penjualan', 0);
-    $total_hpp = data_get($data, 'total_hpp', 0);
+    $total_cost = data_get($data, 'total_cost', 0);
     $laba_kotor = data_get($data, 'laba_kotor', 0);
     $beban_rows = data_get($data, 'beban_rows', []);
     $total_beban = data_get($data, 'total_beban', 0);
@@ -101,7 +101,7 @@
     </tr>
     <tr>
         <td>Harga Pokok Penjualan</td>
-        <td class="right">{{ $formatRupiah($total_hpp) }}</td>
+        <td class="right">{{ $formatRupiah($total_cost) }}</td>
     </tr>
     <tr class="subtotal">
         <td class="pt">Laba Kotor</td>

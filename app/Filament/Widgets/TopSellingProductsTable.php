@@ -92,7 +92,7 @@ class TopSellingProductsTable extends AdvancedTableWidget
                 "{$productsTable}.nama_produk",
                 "{$productsTable}.sku",
                 DB::raw("SUM({$itemsTable}.qty) as total_qty"),
-                DB::raw("SUM({$itemsTable}.qty * {$itemsTable}.harga_jual) as total_amount"),
+                DB::raw("SUM({$itemsTable}.qty * {$itemsTable}.selling_price) as total_amount"),
                 DB::raw("MAX({$salesTable}.tanggal_penjualan) as last_sold_at"),
             ])
             ->join($itemsTable, "{$itemsTable}.id_produk", '=', "{$productsTable}.id")

@@ -6,7 +6,7 @@
     $storePhone = $profile?->phone;
     $storeEmail = $profile?->email;
     $memberName = $penjualan->member?->nama_member ?? 'Pelanggan Umum';
-    $subtotalProduk = (float) $items->sum(fn($item) => (float) ($item->qty ?? 0) * (float) ($item->harga_jual ?? 0));
+    $subtotalProduk = (float) $items->sum(fn($item) => (float) ($item->qty ?? 0) * (float) ($item->selling_price ?? 0));
     $subtotalJasa = (float) $services->sum(
         fn($service) => (float) ($service->qty ?? 0) * (float) ($service->harga ?? 0),
     );
@@ -538,8 +538,8 @@
                                 @endif
                             </td>
                             <td class="center">{{ $item->qty }}</td>
-                            <td>Rp {{ number_format((float) ($item->harga_jual ?? 0), 0, ',', '.') }}</td>
-                            <td>Rp {{ number_format((float) ($item->qty * ($item->harga_jual ?? 0)), 0, ',', '.') }}
+                            <td>Rp {{ number_format((float) ($item->selling_price ?? 0), 0, ',', '.') }}</td>
+                            <td>Rp {{ number_format((float) ($item->qty * ($item->selling_price ?? 0)), 0, ',', '.') }}
                             </td>
                         </tr>
                     @endforeach

@@ -15,7 +15,7 @@ interface Gudang { id: number; nama_gudang: string }
 interface Batch {
     id: number
     qty_sisa: number
-    hpp: number
+    cost_price: number
     kondisi: string | null
     no_po: string | null
 }

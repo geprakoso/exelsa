@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
@@ -7,7 +7,11 @@ import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
 import Card from '@/components/ui/card.vue'
 import Badge from '@/components/ui/badge.vue'
-import { Plus, Search, Eye, Pencil, Trash2, Filter, X } from 'lucide-vue-next'
+import Dialog from '@/components/ui/dialog.vue'
+import Sheet from '@/components/ui/sheet/index.vue'
+import SheetContent from '@/components/ui/sheet/sheet.vue'
+import PenjualanForm from '@/components/forms/PenjualanForm.vue'
+import { Plus, Search, Eye, Pencil, Trash2, Filter, X, LayoutPanelLeft, Maximize2 } from 'lucide-vue-next'
 
 const page = usePage()
 
@@ -23,12 +27,45 @@ interface Penjualan {
     karyawan: { nama: string } | null
 }
 
+type ViewMode = 'sheet' | 'modal'
+
 const penjualans = computed(() => page.props.penjualans?.data || [])
 const stats = computed(() => page.props.stats || {})
 const filters = computed(() => page.props.filters || {})
 
 const searchQuery = ref(filters.value.search || '')
 const statusFilter = ref(filters.value.status || 'all')
+const showForm = ref(false)
+const viewMode = ref<ViewMode>('sheet')
+
+try {
+    const saved = localStorage.getItem('penjualan-view-mode') as ViewMode
+    if (saved && ['sheet', 'modal'].includes(saved)) {
+        viewMode.value = saved
+    }
+} catch {
+    // Ignore localStorage errors
+}
+
+watch(viewMode, (mode) => {
+    try {
+        localStorage.setItem('penjualan-view-mode', mode)
+    } catch {
+        // Ignore localStorage errors
+    }
+})
+
+function toggleViewMode(mode: ViewMode) {
+    viewMode.value = mode
+}
+
+function openCreateForm() {
+    showForm.value = true
+}
+
+function closeForm() {
+    showForm.value = false
+}
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('id-ID', {
@@ -66,6 +103,11 @@ function deletePenjualan(id: number) {
         router.delete(`/app/admin/transactions/penjualan/${id}`)
     }
 }
+
+function onTransactionSaved() {
+    showForm.value = false
+    router.reload({ only: ['penjualans', 'stats'] })
+}
 </script>
 
 <template>
@@ -80,12 +122,10 @@ function deletePenjualan(id: number) {
                 ]"
             >
                 <template #actions>
-                    <Link href="/app/admin/transactions/penjualan/create">
-                        <Button>
-                            <Plus class="h-4 w-4 mr-2" />
-                            New Transaction
-                        </Button>
-                    </Link>
+                    <Button @click="openCreateForm">
+                        <Plus class="h-4 w-4 mr-2" />
+                        New Transaction
+                    </Button>
                 </template>
             </PageHeader>
             
@@ -250,5 +290,55 @@ function deletePenjualan(id: number) {
                 </div>
             </Card>
         </div>
+        
+        <!-- Dynamic Form Wrapper (Sheet or Dialog) -->
+        <component :is="viewMode === 'sheet' ? Sheet : 'div'" v-if="showForm || viewMode === 'sheet'">
+            <component
+                :is="viewMode === 'sheet' ? SheetContent : Dialog"
+                :open="showForm"
+                @update:open="showForm = $event"
+                :class="viewMode === 'sheet' ? 'w-[600px] sm:max-w-[600px]' : 'max-w-2xl max-h-[90vh]'"
+            >
+                <div :class="viewMode === 'sheet' ? 'space-y-6 h-full flex flex-col' : 'space-y-6 flex flex-col max-h-[calc(90vh-3rem)]'">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h2 class="text-lg font-semibold">New Transaction</h2>
+                            <p class="text-sm text-muted-foreground">Create a new sales transaction</p>
+                        </div>
+                        <div class="flex items-center gap-2" :class="viewMode === 'modal' ? '-mr-2 -mt-2' : ''">
+                            <div class="flex items-center gap-1 rounded-lg border bg-muted p-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-7 w-7"
+                                    :class="viewMode === 'sheet' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
+                                    @click="toggleViewMode('sheet')"
+                                    title="Slide-over Mode"
+                                >
+                                    <LayoutPanelLeft class="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-7 w-7"
+                                    :class="viewMode === 'modal' ? 'bg-background shadow-sm' : 'hover:bg-transparent'"
+                                    @click="toggleViewMode('modal')"
+                                    title="Popup Mode"
+                                >
+                                    <Maximize2 class="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
+                            <Button variant="ghost" size="icon" class="shrink-0" @click="closeForm" title="Close">
+                                <X class="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-y-auto pr-2 flex-1" :class="viewMode === 'sheet' ? 'flex-1' : ''">
+                        <PenjualanForm @saved="onTransactionSaved" />
+                    </div>
+                </div>
+            </component>
+        </component>
     </AppLayout>
 </template>

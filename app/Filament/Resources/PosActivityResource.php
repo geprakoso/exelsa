@@ -280,7 +280,7 @@ class PosActivityResource extends BaseResource
                                                 ->badge()
                                                 ->color('primary')
                                                 ->columnSpan(1),
-                                            TextEntry::make('harga_jual')
+                                            TextEntry::make('selling_price')
                                                 ->label('Harga')
                                                 ->size('md')
                                                 ->formatStateUsing(fn($state) => money($state, 'IDR')->formatWithoutZeroes())
@@ -290,7 +290,7 @@ class PosActivityResource extends BaseResource
                                                 ->label('Subtotal')
                                                 ->weight('semibold')
                                                 ->size('md')
-                                                ->state(fn($record) => ($record->qty ?? 0) * ($record->harga_jual ?? 0) * 100)
+                                                ->state(fn($record) => ($record->qty ?? 0) * ($record->selling_price ?? 0) * 100)
                                                 ->formatStateUsing(fn($state) => money($state, 'IDR')->formatWithoutZeroes())
                                                 ->columnSpan(2),
                                             TextEntry::make('kondisi')
@@ -308,7 +308,7 @@ class PosActivityResource extends BaseResource
                             ]),
                         // TextEntry::make('items_subtotal_display')
                         //     ->label('Subtotal Item')
-                        //     ->state(fn(Penjualan $record) => $record->items?->sum(fn($item) => (float) ($item->harga_jual ?? 0) * (int) ($item->qty ?? 0)) ?? 0 )
+                        //     ->state(fn(Penjualan $record) => $record->items?->sum(fn($item) => (float) ($item->selling_price ?? 0) * (int) ($item->qty ?? 0)) ?? 0 )
                         //     ->moneyy('IDR')
                         //     ->columnSpanFull()
                     ]),       //     ->extraAttributes(['class' => 'text-left font-semibold text-lg mt-2']),

@@ -146,7 +146,7 @@ class AdvancedStatsOverviewWidget extends BaseWidget
             // Koleksi PHP (Processing di level PHP, bukan Database)
             ->sum(
                 fn($penjualan) =>
-                $penjualan->items->sum(fn($item) => (int) ($item->harga_jual ?? 0) * (int) ($item->qty ?? 0))
+                $penjualan->items->sum(fn($item) => (int) ($item->selling_price ?? 0) * (int) ($item->qty ?? 0))
                     + $penjualan->jasaItems->sum(fn($item) => (int) ($item->harga ?? 0) * (int) ($item->qty ?? 0))
             );
     }
@@ -170,7 +170,7 @@ class AdvancedStatsOverviewWidget extends BaseWidget
         return $pembelians->sum(function ($record) {
             $barangTotal = $record->items->sum(function ($item) {
                 // Menghitung HPP * Qty
-                return (int) ($item->hpp ?? 0) * (int) ($item->qty ?? 0);
+                return (int) ($item->cost_price ?? 0) * (int) ($item->qty ?? 0);
             });
             $jasaTotal = $record->jasaItems->sum(function ($item) {
                 return (int) ($item->harga ?? 0) * (int) ($item->qty ?? 0);

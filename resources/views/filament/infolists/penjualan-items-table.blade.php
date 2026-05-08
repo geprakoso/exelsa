@@ -9,7 +9,7 @@
         $rows = [];
     }
 
-    $totalNominal = collect($rows)->sum(fn ($row) => (float) ($row->harga_jual ?? 0));
+    $totalNominal = collect($rows)->sum(fn ($row) => (float) ($row->selling_price ?? 0));
 @endphp
 
 <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
@@ -18,7 +18,7 @@
             <tr>
                 <th class="w-40 px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Nama Produk</th>
                 <th class="w-20 px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Qty</th>
-                <th class="w-40 px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Harga Jual</th>
+                <th class="w-40 px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Selling Price</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -45,7 +45,7 @@
                         {{ (int) ($row->qty ?? 0) }}
                     </td>
                     <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">
-                        Rp {{ number_format((float) ($row->harga_jual ?? 0), 0, ',', '.') }}
+                        Rp {{ number_format((float) ($row->selling_price ?? 0), 0, ',', '.') }}
                     </td>
                 </tr>
             @empty

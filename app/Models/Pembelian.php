@@ -22,7 +22,8 @@ class Pembelian extends Model
         'no_po',
         'nota_supplier',
         'tanggal',
-        'harga_jual',
+        'total_amount',
+        'total_selling_price',
         'catatan',
         'tipe_pembelian',
         'jenis_pembayaran',
@@ -104,7 +105,8 @@ class Pembelian extends Model
     protected $casts = [
         'tanggal' => 'date',
         'tgl_tempo' => 'date',
-        'harga_jual' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'total_selling_price' => 'decimal:2',
         'foto_dokumen' => 'array',
         'deleted_at' => 'datetime',
     ];
@@ -206,12 +208,12 @@ class Pembelian extends Model
 
         // Use loaded relations if available (avoids N+1)
         if ($this->relationLoaded('items') && $this->relationLoaded('jasaItems')) {
-            $itemsTotal = (float) $this->items->sum(fn($item) => ($item->qty ?? 0) * ($item->hpp ?? 0));
+            $itemsTotal = (float) $this->items->sum(fn($item) => ($item->qty ?? 0) * ($item->cost_price ?? 0));
             $jasaTotal = (float) $this->jasaItems->sum(fn($item) => ($item->qty ?? 0) * ($item->harga ?? 0));
         } else {
             // Fallback to database queries
             $itemsTotal = (float) ($this->items()
-                ->selectRaw('COALESCE(SUM(qty * hpp), 0) as total')
+                ->selectRaw('COALESCE(SUM(qty * cost_price), 0) as total')
                 ->value('total') ?? 0);
             $jasaTotal = (float) ($this->jasaItems()
                 ->selectRaw('COALESCE(SUM(qty * harga), 0) as total')

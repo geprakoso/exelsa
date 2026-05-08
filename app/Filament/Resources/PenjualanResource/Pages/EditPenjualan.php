@@ -25,8 +25,8 @@ class EditPenjualan extends EditRecord
                 'id_pembelian_item' => $item->id_pembelian_item,
                 'kondisi' => $item->kondisi,
                 'qty' => $item->qty,
-                'hpp' => $item->hpp,
-                'harga_jual' => $item->harga_jual,
+                'cost_price' => $item->cost_price,
+                'selling_price' => $item->selling_price,
                 'serials' => $item->serials ?? [],
             ])
             // Group by product, condition, and batch, sum qty and merge serials
@@ -40,8 +40,8 @@ class EditPenjualan extends EditRecord
                     'id_pembelian_item' => $first['id_pembelian_item'],
                     'kondisi' => $first['kondisi'],
                     'qty' => $group->sum('qty'),
-                    'hpp' => $first['hpp'],
-                    'harga_jual' => $first['harga_jual'],
+                    'cost_price' => $first['cost_price'],
+                    'selling_price' => $first['selling_price'],
                     'serials' => $allSerials,
                 ];
             })
@@ -87,7 +87,7 @@ class EditPenjualan extends EditRecord
         foreach ($items as $item) {
             $productId = (int) ($item['id_produk'] ?? 0);
             $qty = (int) ($item['qty'] ?? 0);
-            $customPrice = $item['harga_jual'] ?? null;
+            $customPrice = $item['selling_price'] ?? null;
             $condition = $item['kondisi'] ?? null;
             $batchId = (int) ($item['id_pembelian_item'] ?? 0);
             $serials = is_array($item['serials'] ?? null) ? array_values($item['serials']) : [];
@@ -124,7 +124,7 @@ class EditPenjualan extends EditRecord
                     'id_produk' => $productId,
                     'id_pembelian_item' => $batch->id_pembelian_item,
                     'qty' => $qty,
-                    'harga_jual' => $customPrice,
+                    'selling_price' => $customPrice,
                     'kondisi' => $batch->kondisi,
                     'serials' => empty($takeSerials) ? null : $takeSerials,
                 ]);
@@ -179,7 +179,7 @@ class EditPenjualan extends EditRecord
                     'id_produk' => $productId,
                     'id_pembelian_item' => $batch->id_pembelian_item,
                     'qty' => $takeQty,
-                    'harga_jual' => $customPrice,
+                    'selling_price' => $customPrice,
                     'kondisi' => $condition ?? $batch->kondisi,
                     'serials' => empty($takeSerials) ? null : $takeSerials,
                 ]);

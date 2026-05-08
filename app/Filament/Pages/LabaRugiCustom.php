@@ -169,7 +169,7 @@ class LabaRugiCustom extends Page
             'company_name' => config('app.name'),
             'periode_label' => $this->formatPeriodeLabel($start, $end),
             'total_penjualan' => $totalPenjualan,
-            'total_hpp' => $totalHpp,
+            'total_cost' => $totalHpp,
             'laba_kotor' => $labaKotor,
             'beban_rows' => $bebanRows,
             'total_beban' => $totalBeban,
@@ -260,7 +260,7 @@ class LabaRugiCustom extends Page
     {
         $produkTotal = PenjualanItem::query()
             ->whereHas('penjualan', fn ($query) => $query->whereBetween('tanggal_penjualan', [$start, $end]))
-            ->selectRaw('SUM(COALESCE(harga_jual, 0) * COALESCE(qty, 0)) as total')
+            ->selectRaw('SUM(COALESCE(selling_price, 0) * COALESCE(qty, 0)) as total')
             ->value('total') ?? 0;
 
         $jasaTotal = PenjualanJasa::query()
@@ -277,7 +277,7 @@ class LabaRugiCustom extends Page
             ->whereHas('pembelian', fn ($query) => $query->whereBetween('tanggal', [$start, $end]))
             ->whereHas('penjualanItems')
             ->join('tb_penjualan_item', 'tb_pembelian_item.id_pembelian_item', '=', 'tb_penjualan_item.id_pembelian_item')
-            ->selectRaw('SUM(tb_pembelian_item.hpp * tb_penjualan_item.qty) as total')
+            ->selectRaw('SUM(tb_pembelian_item.cost_price * tb_penjualan_item.qty) as total')
             ->value('total') ?? 0;
 
         return (float) $total;
@@ -401,7 +401,7 @@ class LabaRugiCustom extends Page
         $rows[] = [
             'Section' => 'Beban Pokok Penjualan',
             'Item' => 'Harga Pokok Penjualan',
-            'Amount' => $data['total_hpp'],
+            'Amount' => $data['total_cost'],
         ];
         $rows[] = [
             'Section' => 'Laba Kotor',

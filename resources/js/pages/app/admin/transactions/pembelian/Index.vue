@@ -7,6 +7,8 @@ import Button from '@/components/ui/button.vue'
 import Input from '@/components/ui/input.vue'
 import Card from '@/components/ui/card.vue'
 import Badge from '@/components/ui/badge.vue'
+import Slideover from '@/components/ui/slideover.vue'
+import PembelianForm from '@/components/forms/PembelianForm.vue'
 import { Plus, Search, Eye, Pencil, Trash2, Filter, X } from 'lucide-vue-next'
 
 const page = usePage()
@@ -16,7 +18,7 @@ interface Pembelian {
     no_po: string
     nota_supplier: string
     tanggal: string
-    harga_jual: number
+    total_amount: number
     jenis_pembayaran: string
     supplier: { nama_supplier: string } | null
     karyawan: { nama: string } | null
@@ -28,6 +30,7 @@ const filters = computed(() => page.props.filters || {})
 
 const searchQuery = ref(filters.value.search || '')
 const statusFilter = ref(filters.value.status || 'all')
+const showCreateSlideover = ref(false)
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('id-ID', {
@@ -65,6 +68,11 @@ function deletePembelian(id: number) {
         router.delete(`/app/admin/transactions/pembelian/${id}`)
     }
 }
+
+function onPurchaseSaved() {
+    showCreateSlideover.value = false
+    router.reload({ only: ['pembelians', 'stats'] })
+}
 </script>
 
 <template>
@@ -79,12 +87,10 @@ function deletePembelian(id: number) {
                 ]"
             >
                 <template #actions>
-                    <Link href="/app/admin/transactions/pembelian/create">
-                        <Button>
-                            <Plus class="h-4 w-4 mr-2" />
-                            New Purchase
-                        </Button>
-                    </Link>
+                    <Button @click="showCreateSlideover = true">
+                        <Plus class="h-4 w-4 mr-2" />
+                        New Purchase
+                    </Button>
                 </template>
             </PageHeader>
             
@@ -181,7 +187,7 @@ function deletePembelian(id: number) {
                                     {{ pembelian.nota_supplier || '-' }}
                                 </td>
                                 <td class="px-4 py-3 text-right text-sm font-medium">
-                                    {{ formatCurrency(pembelian.harga_jual) }}
+                                    {{ formatCurrency(pembelian.total_amount) }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <Badge
@@ -245,5 +251,13 @@ function deletePembelian(id: number) {
                 </div>
             </Card>
         </div>
+        
+        <Slideover
+            v-model:open="showCreateSlideover"
+            title="New Purchase"
+            size="xl"
+        >
+            <PembelianForm @saved="onPurchaseSaved" />
+        </Slideover>
     </AppLayout>
 </template>

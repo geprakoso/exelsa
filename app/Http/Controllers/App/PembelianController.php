@@ -53,13 +53,21 @@ class PembelianController extends Controller
             'total_count' => Pembelian::count(),
             'lunas_count' => Pembelian::where('jenis_pembayaran', 'lunas')->count(),
             'tempo_count' => Pembelian::where('jenis_pembayaran', 'tempo')->count(),
-            'total_nilai' => Pembelian::sum('harga_jual') ?? 0,
+            'total_nilai' => Pembelian::sum('total_amount') ?? 0,
         ];
 
         return Inertia::render('app/admin/transactions/pembelian/Index', [
             'pembelians' => $pembelians,
             'stats' => $stats,
             'filters' => $request->only(['from', 'to', 'status', 'search']),
+            'suppliers' => Supplier::orderBy('nama_supplier')->get(['id', 'nama_supplier']),
+            'karyawans' => Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']),
+            'produks' => Produk::with(['brand', 'kategori'])->orderBy('nama_produk')->get(['id', 'nama_produk', 'sku']),
+            'paymentAccounts' => AkunTransaksi::where('jenis', 'kas')->orWhere('jenis', 'bank')->orderBy('nama_akun')->get(['id', 'kode_akun', 'nama_akun', 'jenis']),
+            'jenisPembayaranOptions' => [
+                ['value' => 'lunas', 'label' => 'Lunas (Cash)'],
+                ['value' => 'tempo', 'label' => 'Tempo (Kredit)'],
+            ],
         ]);
     }
 
@@ -109,13 +117,13 @@ class PembelianController extends Controller
             'items' => 'required|array|min:1',
             'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
-            'items.*.harga' => 'required|numeric|min:0',
+            'items.*.cost_price' => 'required|numeric|min:0',
+            'items.*.selling_price' => 'required|numeric|min:0',
         ]);
 
-        // Calculate total
-        $total = collect($validated['items'])->sum(function ($item) {
-            return $item['qty'] * $item['harga'];
-        });
+        // Calculate totals
+        $total = collect($validated['items'])->sum(fn($item) => $item['qty'] * $item['cost_price']);
+        $totalSellingPrice = collect($validated['items'])->sum(fn($item) => $item['qty'] * $item['selling_price']);
 
         // Create pembelian
         $pembelian = Pembelian::create([
@@ -127,7 +135,8 @@ class PembelianController extends Controller
             'tipe_pembelian' => $validated['tipe_pembelian'] ?? 'non_ppn',
             'jenis_pembayaran' => $validated['jenis_pembayaran'] ?? 'lunas',
             'tgl_tempo' => $validated['tgl_tempo'] ?? null,
-            'harga_jual' => $total, // Using harga_jual field for total purchase value
+            'total_amount' => $total,
+            'total_selling_price' => $totalSellingPrice,
         ]);
 
         // Create items
@@ -138,7 +147,8 @@ class PembelianController extends Controller
                 'qty' => $itemData['qty'],
                 'qty_masuk' => 0,
                 'qty_sisa' => $itemData['qty'],
-                'harga_jual' => $itemData['harga'],
+                'cost_price' => $itemData['cost_price'],
+                'selling_price' => $itemData['selling_price'],
             ]);
         }
 
@@ -211,13 +221,13 @@ class PembelianController extends Controller
             'items.*.id' => 'nullable|exists:tb_pembelian_item,id_pembelian_item',
             'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
-            'items.*.harga' => 'required|numeric|min:0',
+            'items.*.cost_price' => 'required|numeric|min:0',
+            'items.*.selling_price' => 'required|numeric|min:0',
         ]);
 
-        // Calculate total
-        $total = collect($validated['items'])->sum(function ($item) {
-            return $item['qty'] * $item['harga'];
-        });
+        // Calculate totals
+        $total = collect($validated['items'])->sum(fn($item) => $item['qty'] * $item['cost_price']);
+        $totalSellingPrice = collect($validated['items'])->sum(fn($item) => $item['qty'] * $item['selling_price']);
 
         // Update pembelian
         $pembelian->update([
@@ -229,7 +239,8 @@ class PembelianController extends Controller
             'tipe_pembelian' => $validated['tipe_pembelian'] ?? 'non_ppn',
             'jenis_pembayaran' => $validated['jenis_pembayaran'] ?? 'lunas',
             'tgl_tempo' => $validated['tgl_tempo'] ?? null,
-            'harga_jual' => $total,
+            'total_amount' => $total,
+            'total_selling_price' => $totalSellingPrice,
         ]);
 
         // Sync items
@@ -242,7 +253,8 @@ class PembelianController extends Controller
                 $item->update([
                     'id_produk' => $itemData['id_produk'],
                     'qty' => $itemData['qty'],
-                    'harga_jual' => $itemData['harga'],
+                    'cost_price' => $itemData['cost_price'],
+                    'selling_price' => $itemData['selling_price'],
                 ]);
             } else {
                 PembelianItem::create([
@@ -251,7 +263,8 @@ class PembelianController extends Controller
                     'qty' => $itemData['qty'],
                     'qty_masuk' => 0,
                     'qty_sisa' => $itemData['qty'],
-                    'harga_jual' => $itemData['harga'],
+                    'cost_price' => $itemData['cost_price'],
+                    'selling_price' => $itemData['selling_price'],
                 ]);
             }
         }

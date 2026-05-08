@@ -3,23 +3,23 @@
 Semua perubahan penting pada proyek ini direkonstruksi dari riwayat git. Pembuatan versi sekarang mengikuti sistem CalVer (`YYYY.MM.DD`) selama aplikasi masih dalam tahap pra-1.0. Entri disusun secara kronologis dengan perubahan terbaru berada di paling atas.
 
 ## 2026.03.06
-### Perbaikan Validasi Form Pembelian (HPP & Harga Jual)
+### Perbaikan Validasi Form Pembelian (Cost Price & Selling Price)
 
 #### 1. Fix False-Positive `required` pada Input Item Pembelian
-- **Kondisi Required Lebih Akurat**: Memperbarui rule `required` pada field `hpp` dan `harga_jual` di `PembelianResource` agar hanya wajib ketika produk sudah dipilih, nilai field masih kosong, dan histori harga terakhir produk memang belum tersedia (`null`).
+- **Kondisi Required Lebih Akurat**: Memperbarui rule `required` pada field `cost_price` dan `selling_price` di `PembelianResource` agar hanya wajib ketika produk sudah dipilih, nilai field masih kosong, dan histori harga terakhir produk memang belum tersedia (`null`).
 - **Sinkronisasi State Form**: Mengubah mode reaktif field dari `live(onBlur: true)` menjadi `live()` untuk mencegah keterlambatan sinkronisasi state yang bisa memicu validasi `required` secara keliru.
-- **Dampak**: Input pembelian untuk barang baru maupun barang existing kini tidak lagi menampilkan error `hpp required` saat nilai sudah diisi/tersedia.
+- **Dampak**: Input pembelian untuk barang baru maupun barang existing kini tidak lagi menampilkan error `cost_price required` saat nilai sudah diisi/tersedia.
 
 ## 2026.03.10
 ### Penjualan: Pemilihan Batch Manual
 
 #### 1. Dropdown Batch di Form Penjualan
 - **Pilih Batch Manual**: Menambahkan field `Batch` pada repeater item penjualan agar pengguna bisa memilih batch tertentu, bukan selalu FIFO batch pertama.
-- **Sinkronisasi Harga & Kondisi**: Saat batch dipilih, `hpp`, `harga`, dan `kondisi` otomatis mengikuti batch tersebut.
+- **Sinkronisasi Harga & Kondisi**: Saat batch dipilih, `cost_price`, `harga`, dan `kondisi` otomatis mengikuti batch tersebut.
 - **Validasi Stok per Batch**: `Qty` sekarang divalidasi terhadap stok batch yang dipilih (atau total stok bila batch tidak dipilih).
 
 #### 2. Informasi Batch Lengkap di Selector Produk
-- **Tampilkan Semua Batch**: Dropdown produk menampilkan daftar batch aktif (PO/Batch, Qty, HPP) di bawah nama produk untuk mempermudah pemilihan batch.
+- **Tampilkan Semua Batch**: Dropdown produk menampilkan daftar batch aktif (PO/Batch, Qty, Cost Price) di bawah nama produk untuk mempermudah pemilihan batch.
 
 ## 2026.02.19
 ### Perbaikan Bug & Peningkatan UI Stok
@@ -243,8 +243,8 @@ Semua perubahan penting pada proyek ini direkonstruksi dari riwayat git. Pembuat
 ## 2026.01.23
 ### Perbaikan Harga Pokok & Upload Dokumen Pembelian
 - **Fix Tampilan HPP**: 
-  - Memperbaiki masalah HPP yang tidak muncul pada saat edit *existing record* di tabel barang keluar (`TukarTambahResource`).
-  - Mengimplementasikan *hydration hook* untuk menarik data HPP dari item penjualan atau batch pembelian secara otomatis.
+- Memperbaiki masalah Cost Price yang tidak muncul pada saat edit *existing record* di tabel barang keluar (`TukarTambahResource`).
+- Mengimplementasikan *hydration hook* untuk menarik data cost price dari item penjualan atau batch pembelian secara otomatis.
 - **Upload Foto Dokumen**:
   - Menambahkan fitur upload foto dokumen umum (faktur, surat jalan) pada halaman *View* Pembelian.
   - Foto tersimpan dalam format JSON dan ditampilkan pada bagian khusus di *Infolist*.
@@ -550,7 +550,7 @@ Semua perubahan penting pada proyek ini direkonstruksi dari riwayat git. Pembuat
 - Menyesuaikan format ekspor akuntansi.
 
 ## 2025.12.23
-- Menambahkan ringkasan **Laporan Laba Rugi**: total penjualan (pendapatan) dan laba kotor (pendapatan - HPP), serta memperbarui judul halaman view agar menampilkan bulan laporan.
+- Menambahkan ringkasan **Laporan Laba Rugi**: total penjualan (pendapatan) dan laba kotor (pendapatan - cost price), serta memperbarui judul halaman view agar menampilkan bulan laporan.
 - Menyelaraskan perhitungan **Laporan Laba Rugi**: total penjualan kini mencakup penjualan produk + jasa, laba kotor/laba rugi dihitung dari total gabungan, serta memastikan bulan dengan penjualan jasa saja tetap muncul.
 - Memperbaiki daftar tahun pada filter **Laporan Laba Rugi** agar mencakup tahun yang hanya memiliki data penjualan.
 - Menambahkan pagination Livewire (25 baris per halaman) pada tabel daftar penjualan, beban, dan pembelian; total pada bagian bawah kini dihitung untuk seluruh bulan, bukan hanya halaman aktif.
@@ -588,7 +588,7 @@ Semua perubahan penting pada proyek ini direkonstruksi dari riwayat git. Pembuat
 - Meningkatkan **UX mobile** untuk tabel `infolist` (scroll horizontal) dan tata letak bergaya tabel untuk daftar item **Pembelian**, **Penjualan**, dan **Request Order**.
 - Menambahkan `infolist` **Penjualan** dengan total yang dikalkulasi (*computed totals*); total sekarang dihitung ulang otomatis berdasarkan item saat `create`, `update`, atau `delete`.
 - Menambahkan modal pembuatan "Tambah Member" secara *inline* dari menu select member di **Penjualan**.
-- Menyempurnakan `repeater` form **Request Order** (dependensi kategori → produk, *placeholders*, dan tampilan HPP/harga jual yang terisi otomatis dari harga *batch* terbaru).
+- Menyempurnakan `repeater` form **Request Order** (dependensi kategori → produk, *placeholders*, dan tampilan cost_price/selling_price yang terisi otomatis dari harga *batch* terbaru).
 - Memperbaiki beberapa error `500` terkait Filament (konflik import, enum/class yang tidak valid) dan memindahkan aksi `create/edit` **Pembelian** ke header halaman.
 - Memindahkan aksi `create` & `edit` **Stock Adjustment** / **Stock Opname** ke header halaman (menghapus tombol aksi di bawah form) dan meningkatkan alur `create` Stock Adjustment agar redirect ke halaman edit untuk penambahan item.
 

@@ -69,7 +69,7 @@
         }
 
         $qty = (float) ($item->qty ?? 0);
-        $unit = (float) ($item->harga_jual ?? 0);
+        $unit = (float) ($item->selling_price ?? 0);
         $rows->push([
             'desc' => $desc,
             'qty' => $qty,

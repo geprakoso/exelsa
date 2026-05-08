@@ -246,8 +246,8 @@ class PenjualanResource extends BaseResource
                                 'kondisi' => 'width: 12%;',
                                 'id_pembelian_item' => 'width: 16%;',
                                 'qty' => 'width: 8%;',
-                                'hpp' => 'width: 13%;',
-                                'harga_jual' => 'width: 13%;',
+                                'cost_price' => 'width: 13%;',
+                                'selling_price' => 'width: 13%;',
                                 'serials_count' => 'width: 13%;',
                             ])
                             ->childComponents([
@@ -286,7 +286,7 @@ class PenjualanResource extends BaseResource
                                     ->native(false)
                                     ->live()
                                     ->afterStateUpdated(function (Set $set, ?int $state, Get $get): void {
-                                        $set('harga_jual', null);
+                                        $set('selling_price', null);
                                         $set('kondisi', null);
                                         $set('id_pembelian_item', null);
                                         $set('serials', []);
@@ -295,8 +295,8 @@ class PenjualanResource extends BaseResource
                                             // Get default price from oldest batch
                                             $batch = self::getOldestAvailableBatch($state);
                                             if ($batch) {
-                                                $set('harga_jual', $batch->harga_jual);
-                                                $set('hpp', $batch->hpp);
+                                                $set('selling_price', $batch->selling_price);
+                                                $set('cost_price', $batch->cost_price);
                                                 $set('kondisi', $batch->kondisi);
                                             }
                                         }
@@ -327,11 +327,11 @@ class PenjualanResource extends BaseResource
 
                                         $productId = (int) ($get('id_produk') ?? 0);
                                         if ($productId > 0) {
-                                            // Get price and hpp for this condition
+                                            // Get price and cost_price for this condition
                                             $batch = self::getOldestAvailableBatch($productId, $state);
                                             if ($batch) {
-                                                $set('harga_jual', $batch->harga_jual);
-                                                $set('hpp', $batch->hpp);
+                                                $set('selling_price', $batch->selling_price);
+                                                $set('cost_price', $batch->cost_price);
                                             }
                                         }
                                     }),
@@ -360,8 +360,8 @@ class PenjualanResource extends BaseResource
                                             return;
                                         }
 
-                                        $set('harga_jual', $batch->harga_jual);
-                                        $set('hpp', $batch->hpp);
+                                        $set('selling_price', $batch->selling_price);
+                                        $set('cost_price', $batch->cost_price);
                                         $set('kondisi', $batch->kondisi);
                                     }),
                                 TextInput::make('qty')
@@ -408,14 +408,14 @@ class PenjualanResource extends BaseResource
                                         }
                                         $set('serials', $serials);
                                     }),
-                                TextInput::make('hpp')
-                                    ->label('HPP')
+                                TextInput::make('cost_price')
+                                    ->label('Cost Price')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 0)
                                     ->readOnly()
                                     ->dehydrated(true),
-                                TextInput::make('harga_jual')
+                                TextInput::make('selling_price')
                                     ->label('Harga')
                                     ->numeric()
                                     ->prefix('Rp')
@@ -615,7 +615,7 @@ class PenjualanResource extends BaseResource
                             ->content(function (Get $get): string {
                                 // Calculate Product Total
                                 $items = $get('items_temp') ?? [];
-                                $productTotal = collect($items)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['harga_jual'] ?? 0));
+                                $productTotal = collect($items)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['selling_price'] ?? 0));
 
                                 // Calculate Service Total
                                 $jasaItems = $get('jasaItems') ?? [];
@@ -651,7 +651,7 @@ class PenjualanResource extends BaseResource
                             ->addable(function (Get $get): bool {
                                 // Grand Total
                                 $items = $get('items_temp') ?? [];
-                                $productTotal = collect($items)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['harga_jual'] ?? 0));
+                                $productTotal = collect($items)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['selling_price'] ?? 0));
                                 $jasaItems = $get('jasaItems') ?? [];
                                 $serviceTotal = collect($jasaItems)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['harga'] ?? 0));
                                 $diskon = (int) ($get('diskon_total') ?? 0);
@@ -705,7 +705,7 @@ class PenjualanResource extends BaseResource
                                     ->placeholder(function (Get $get, Component $component): string {
                                         // Grand Total
                                         $items = $get('../../items_temp') ?? [];
-                                        $productTotal = collect($items)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['harga_jual'] ?? 0));
+                                        $productTotal = collect($items)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['selling_price'] ?? 0));
                                         $jasaItems = $get('../../jasaItems') ?? [];
                                         $serviceTotal = collect($jasaItems)->sum(fn($item) => (int) ($item['qty'] ?? 0) * (int) ($item['harga'] ?? 0));
                                         $diskon = (int) ($get('../../diskon_total') ?? 0);
@@ -1328,7 +1328,7 @@ class PenjualanResource extends BaseResource
                                     ->prefix('Rp ')
                                     ->state(function (Penjualan $record): float {
                                         $subtotalProduk = (float) ($record->items()
-                                            ->selectRaw('COALESCE(SUM(qty * harga_jual), 0) as total')
+                                            ->selectRaw('COALESCE(SUM(qty * selling_price), 0) as total')
                                             ->value('total') ?? 0);
                                         $subtotalJasa = (float) ($record->jasaItems()
                                             ->selectRaw('COALESCE(SUM(qty * harga), 0) as total')
@@ -1577,7 +1577,7 @@ class PenjualanResource extends BaseResource
         $labelParts = [
             $item->pembelian?->no_po ? '#' . $item->pembelian->no_po : 'Batch ' . ($index + 1),
             'Qty: ' . number_format((int) ($item->{$qtyColumn} ?? 0), 0, ',', '.'),
-            'HPP: Rp ' . number_format((int) ($item->hpp ?? 0), 0, ',', '.'),
+            'Cost Price: Rp ' . number_format((int) ($item->cost_price ?? 0), 0, ',', '.'),
         ];
 
         return implode(' | ', array_filter($labelParts));
@@ -1634,7 +1634,7 @@ class PenjualanResource extends BaseResource
      */
     protected static function calculateGrandTotal(Penjualan $record): int
     {
-        $totalProduk = $record->items->sum(fn($item) => (int) ($item->harga_jual ?? 0) * (int) ($item->qty ?? 0));
+        $totalProduk = $record->items->sum(fn($item) => (int) ($item->selling_price ?? 0) * (int) ($item->qty ?? 0));
         $totalJasa = $record->jasaItems->sum(fn($jasa) => (int) ($jasa->harga ?? 0) * (int) ($jasa->qty ?? 0));
         $diskon = (int) ($record->diskon_total ?? 0);
 

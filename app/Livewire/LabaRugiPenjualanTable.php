@@ -54,7 +54,7 @@ class LabaRugiPenjualanTable extends Component
 
             $produkTotal = PenjualanItem::query()
                 ->whereHas('penjualan', fn ($query) => $query->whereBetween('tanggal_penjualan', [$start, $end]))
-                ->selectRaw('SUM(COALESCE(harga_jual, 0) * COALESCE(qty, 0)) as total')
+                ->selectRaw('SUM(COALESCE(selling_price, 0) * COALESCE(qty, 0)) as total')
                 ->value('total') ?? 0;
 
             $jasaTotal = PenjualanJasa::query()

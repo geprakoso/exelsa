@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Kategori;
 use App\Models\Produk;
+use App\Models\PembelianItem;
 use App\Services\ImageUploadService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ProdukController extends Controller
@@ -136,8 +138,17 @@ class ProdukController extends Controller
     {
         $search = $request->query('q', '');
         $limit = min((int) $request->query('limit', 50), 100);
+        $inStockOnly = filter_var($request->query('in_stock', false), FILTER_VALIDATE_BOOLEAN);
 
-        $produks = Produk::with(['brand', 'kategori', 'primaryImage'])
+        $fk = PembelianItem::productForeignKey();
+        $qtySisa = PembelianItem::qtySisaColumn();
+        $stockSub = "COALESCE((SELECT SUM(pi.`{$qtySisa}`) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id), 0)";
+
+        $produks = Produk::select(['md_produk.*', DB::raw("({$stockSub}) as stok_on_hand")])
+            ->with(['brand', 'kategori', 'primaryImage'])
+            ->when($inStockOnly, function ($query) use ($stockSub) {
+                $query->whereRaw("({$stockSub}) > 0");
+            })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nama_produk', 'like', "%{$search}%")
@@ -162,6 +173,7 @@ class ProdukController extends Controller
                 'brand' => $produk->brand ? ['id' => $produk->brand->id, 'nama_brand' => $produk->brand->nama_brand] : null,
                 'kategori' => $produk->kategori ? ['id' => $produk->kategori->id, 'nama_kategori' => $produk->kategori->nama_kategori] : null,
                 'image_url' => $produk->primaryImage?->url ?? $produk->image_url,
+                'stok_on_hand' => (int) $produk->stok_on_hand,
             ];
         }));
     }

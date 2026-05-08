@@ -450,7 +450,7 @@ class PembelianReportResource extends BaseResource
         $purchaseKey = $pembelian->getKeyName();
 
         $itemsSub = DB::table('tb_pembelian_item')
-            ->selectRaw('id_pembelian, COALESCE(SUM(qty * hpp), 0) as total_items')
+            ->selectRaw('id_pembelian, COALESCE(SUM(qty * cost_price), 0) as total_items')
             ->groupBy('id_pembelian');
 
         $jasaSub = DB::table('tb_pembelian_jasa')
@@ -503,7 +503,7 @@ class PembelianReportResource extends BaseResource
         $purchaseKey = $pembelian->getKeyName();
 
         $itemsSub = DB::table('tb_pembelian_item')
-            ->selectRaw('id_pembelian, COALESCE(SUM(qty * hpp), 0) as total_items')
+            ->selectRaw('id_pembelian, COALESCE(SUM(qty * cost_price), 0) as total_items')
             ->groupBy('id_pembelian');
 
         $jasaSub = DB::table('tb_pembelian_jasa')

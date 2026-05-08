@@ -292,7 +292,7 @@ class PenjadwalanPengirimanResource extends BaseResource
                                                     ->weight(FontWeight::Medium),
                                                 TextEntry::make('qty')
                                                     ->label('Qty'),
-                                                TextEntry::make('harga_jual')
+                                                TextEntry::make('selling_price')
                                                     ->label('Harga')
                                                     ->money('IDR', true),
                                             ])

@@ -24,9 +24,9 @@ class InventoryProductController extends Controller
 
         // ── Sub-query fragments ───────────────────────────────────────────
         $stockSub = "COALESCE((SELECT SUM(pi.`{$qtySisa}`) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id), 0)";
-        $valueSub = "COALESCE((SELECT SUM(pi.`{$qtySisa}` * pi.hpp) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id), 0)";
-        $hppSub   = "COALESCE((SELECT AVG(pi.hpp) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id AND pi.hpp > 0), 0)";
-        $hjSub    = "COALESCE((SELECT MAX(pi.harga_jual) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id AND pi.harga_jual > 0), 0)";
+        $valueSub = "COALESCE((SELECT SUM(pi.`{$qtySisa}` * pi.cost_price) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id), 0)";
+        $costPriceSub   = "COALESCE((SELECT AVG(pi.cost_price) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id AND pi.cost_price > 0), 0)";
+        $sellingPriceSub    = "COALESCE((SELECT MAX(pi.selling_price) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id AND pi.selling_price > 0), 0)";
 
         // Recent 30-day inbound qty (from new purchases)
         $inSub  = "COALESCE((SELECT SUM(pi.qty) FROM tb_pembelian_item pi WHERE pi.`{$fk}` = md_produk.id AND pi.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)), 0)";
@@ -66,8 +66,8 @@ class InventoryProductController extends Controller
             'md_produk.is_purchasable',
             DB::raw("({$stockSub}) as stok_on_hand"),
             DB::raw("({$valueSub}) as nilai_stok"),
-            DB::raw("({$hppSub})  as avg_hpp"),
-            DB::raw("({$hjSub})   as harga_jual_display"),
+            DB::raw("({$costPriceSub})  as avg_cost_price"),
+            DB::raw("({$sellingPriceSub})   as selling_price_display"),
             DB::raw("({$inSub})   as recent_in"),
             DB::raw("({$outSub})  as recent_out"),
         ])->with(['brand:id,nama_brand', 'kategori:id,nama_kategori', 'images' => function ($query) {

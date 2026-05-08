@@ -19,12 +19,12 @@ Struktur data dalam form Filament diatur menggunakan `Group` dan `Repeater` yang
 // Root Form
 ├── penjualan (Group)
 │   ├── items (Repeater) -> Produk yang dijual
-│   │   └── Row: qty, harga_jual
+│   │   └── Row: qty, selling_price
 │   └── jasa_items (Repeater) -> Jasa yang dijual
 │       └── Row: qty, harga
 ├── pembelian (Group)
 │   └── items (Repeater) -> Produk yang ditukar tambah
-│       └── Row: qty, hpp
+│       └── Row: qty, cost_price
 └── grand_total_tukar_tambah (Placeholder) -> Menampilkan hasil hitungan
 ```
 
@@ -33,7 +33,7 @@ Struktur data dalam form Filament diatur menggunakan `Group` dan `Repeater` yang
 Perhitungan dilakukan secara *real-time* di sisi klien (browser) menggunakan fitur reactive Filament (`live`, `afterStateUpdated`).
 
 ### A. Trigger Perubahan
-Setiap kali field `qty`, `harga_jual`, atau `hpp` berubah di dalam repeater, kita memicu perhitungan ulang.
+Setiap kali field `qty`, `selling_price`, atau `cost_price` berubah di dalam repeater, kita memicu perhitungan ulang.
 
 Contoh pada `pembelian.items`:
 
@@ -44,7 +44,7 @@ TextInput::make('qty')
     ->afterStateUpdated(function (Set $set, Get $get): void {
         // 1. Hitung ulang Total Pembelian (Subtotal)
         $items = $get('../../items') ?? []; // Mengambil items dalam group pembelian
-        $totalPembelian = collect($items)->sum(fn($item) => $item['qty'] * $item['hpp']);
+        $totalPembelian = collect($items)->sum(fn($item) => $item['qty'] * $item['cost_price']);
         $set('../../total_pembelian_summary', number_format($totalPembelian, 0, ',', '.'));
 
         // 2. Hitung ulang Grand Total (Root Level)
@@ -91,7 +91,7 @@ TextInput::make('grand_total_tukar_tambah') // Bisa juga Placeholder::make
 ## 5. Ringkasan Implementasi
 
 1.  **State Paths:** Pastikan nama field dalam Repeater konsisten.
-2.  **Reactivity:** Gunakan `lazy()` atau `live(onBlur: true)` pada field angka (`qty`, `harga`) untuk performa lebih baik daripada `live()` murni.
+2.  **Reactivity:** Gunakan `lazy()` atau `live(onBlur: true)` pada field angka (`qty`, `selling_price`, `cost_price`) untuk performa lebih baik daripada `live()` murni.
 3.  **Cross-Access:** Saat mengubah data di `Pembelian`, kita harus "mengintip" data `Penjualan` untuk menghitung selisihnya, begitu juga sebaliknya.
 4.  **Format:** Gunakan `number_format` untuk tampilan Rupiah pada `Set $set`.
 

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('id_produk')
                 ->constrained('md_produk')
                 ->restrictOnDelete();
-            $table->decimal('hpp', 15, 2)->default(0);
-            $table->decimal('harga_jual', 15, 2)->default(0);
+            $table->decimal('cost_price', 15, 2)->default(0);
+            $table->decimal('selling_price', 15, 2)->default(0);
             $table->unsignedInteger('qty');
             $table->enum('kondisi', ['baru', 'bekas'])->default('baru');
             $table->timestamps();

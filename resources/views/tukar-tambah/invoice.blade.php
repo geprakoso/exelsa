@@ -9,13 +9,13 @@
     $storePhone = $profile?->phone;
     $storeEmail = $profile?->email;
     $memberName = $penjualan?->member?->nama_member ?? 'Pelanggan Umum';
-    $subtotalProduk = (float) $items->sum(fn($item) => (float) ($item->qty ?? 0) * (float) ($item->harga_jual ?? 0));
+    $subtotalProduk = (float) $items->sum(fn($item) => (float) ($item->qty ?? 0) * (float) ($item->selling_price ?? 0));
     $subtotalJasa = (float) $services->sum(
         fn($service) => (float) ($service->qty ?? 0) * (float) ($service->harga ?? 0),
     );
     $subtotalPenjualan = $subtotalProduk + $subtotalJasa;
     $subtotalPembelian = (float) $purchaseItems->sum(
-        fn($item) => (float) ($item->qty ?? 0) * (float) ($item->hpp ?? 0),
+        fn($item) => (float) ($item->qty ?? 0) * (float) ($item->cost_price ?? 0),
     );
     $selisihTotal = $subtotalPenjualan - $subtotalPembelian;
 @endphp
@@ -433,9 +433,9 @@
                     <tr>
                         <td>{{ $item->produk?->nama_produk ?? '-' }}</td>
                         <td class="text-right">{{ (int) ($item->qty ?? 0) }}</td>
-                        <td class="text-right">Rp {{ number_format((int) ($item->harga_jual ?? 0), 0, ',', '.') }}</td>
+                        <td class="text-right">Rp {{ number_format((int) ($item->selling_price ?? 0), 0, ',', '.') }}</td>
                         <td class="text-right">Rp
-                            {{ number_format((int) ($item->qty ?? 0) * (int) ($item->harga_jual ?? 0), 0, ',', '.') }}
+                            {{ number_format((int) ($item->qty ?? 0) * (int) ($item->selling_price ?? 0), 0, ',', '.') }}
                         </td>
                     </tr>
                 @empty
@@ -480,7 +480,7 @@
                 <tr>
                     <th>Produk</th>
                     <th class="text-right">Qty</th>
-                    <th class="text-right">HPP</th>
+                    <th class="text-right">Cost Price</th>
                     <th class="text-right">Subtotal</th>
                 </tr>
             </thead>
@@ -489,9 +489,9 @@
                     <tr>
                         <td>{{ $item->produk?->nama_produk ?? '-' }}</td>
                         <td class="text-right">{{ (int) ($item->qty ?? 0) }}</td>
-                        <td class="text-right">Rp {{ number_format((int) ($item->hpp ?? 0), 0, ',', '.') }}</td>
+                        <td class="text-right">Rp {{ number_format((int) ($item->cost_price ?? 0), 0, ',', '.') }}</td>
                         <td class="text-right">Rp
-                            {{ number_format((int) ($item->qty ?? 0) * (int) ($item->hpp ?? 0), 0, ',', '.') }}</td>
+                            {{ number_format((int) ($item->qty ?? 0) * (int) ($item->cost_price ?? 0), 0, ',', '.') }}</td>
                     </tr>
                 @empty
                     <tr>

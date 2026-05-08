@@ -97,9 +97,9 @@ function deletePenjualan() {
                                             <p class="text-xs text-muted-foreground">{{ item.produk?.sku || '-' }}</p>
                                         </td>
                                         <td class="px-3 py-3 text-right">{{ item.qty }}</td>
-                                        <td class="px-3 py-3 text-right">{{ formatCurrency(item.harga_jual) }}</td>
+                                        <td class="px-3 py-3 text-right">{{ formatCurrency(item.selling_price) }}</td>
                                         <td class="px-3 py-3 text-right font-medium">
-                                            {{ formatCurrency(item.qty * item.harga_jual) }}
+                                            {{ formatCurrency(item.qty * item.selling_price) }}
                                         </td>
                                     </tr>
                                     <tr v-if="!penjualan?.items?.length">

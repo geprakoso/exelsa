@@ -132,7 +132,7 @@ class PenjualanReportResource extends BaseResource
                             ->formatStateUsing(fn($state) => self::formatCurrency((int) $state)),
                     ])
                     ->sortable(),
-                TextColumn::make('total_hpp')
+                TextColumn::make('total_cost')
                     ->label('Total HPP')
                     ->state(fn(Penjualan $record) => self::formatCurrency(
                         self::calculateHppTotal($record)
@@ -499,9 +499,9 @@ class PenjualanReportResource extends BaseResource
     {
         return (int) $record->items->sum(function ($item): int {
             $qty = (int) ($item->qty ?? 0);
-            $harga = (int) ($item->harga_jual ?? 0);
+            $sellingPrice = (int) ($item->selling_price ?? 0);
 
-            return $harga * $qty;
+            return $sellingPrice * $qty;
         });
     }
 
@@ -509,9 +509,9 @@ class PenjualanReportResource extends BaseResource
     {
         return (int) $record->items->sum(function ($item): int {
             $qty = (int) ($item->qty ?? 0);
-            $hpp = (int) ($item->hpp ?? 0);
+            $costPrice = (int) ($item->cost_price ?? 0);
 
-            return $hpp * $qty;
+            return $costPrice * $qty;
         });
     }
 
@@ -532,7 +532,7 @@ class PenjualanReportResource extends BaseResource
         $salesKey = $penjualan->getKeyName();
 
         $itemsSub = DB::table('tb_penjualan_item')
-            ->selectRaw('id_penjualan, COALESCE(SUM(qty * harga_jual), 0) as total_penjualan')
+            ->selectRaw('id_penjualan, COALESCE(SUM(qty * selling_price), 0) as total_penjualan')
             ->groupBy('id_penjualan');
 
         $jasaSub = DB::table('tb_penjualan_jasa')
@@ -562,7 +562,7 @@ class PenjualanReportResource extends BaseResource
         $salesKey = $penjualan->getKeyName();
 
         $itemsSub = DB::table('tb_penjualan_item')
-            ->selectRaw('id_penjualan, COALESCE(SUM(qty * harga_jual), 0) as total_penjualan, COALESCE(SUM(qty * hpp), 0) as total_hpp')
+            ->selectRaw('id_penjualan, COALESCE(SUM(qty * selling_price), 0) as total_penjualan, COALESCE(SUM(qty * cost_price), 0) as total_cost')
             ->groupBy('id_penjualan');
 
         $jasaSub = DB::table('tb_penjualan_jasa')
@@ -577,7 +577,7 @@ class PenjualanReportResource extends BaseResource
         $summary = $summaryQuery
             ->leftJoinSub($itemsSub, 'items_sum', 'items_sum.id_penjualan', '=', "{$salesTable}.{$salesKey}")
             ->leftJoinSub($jasaSub, 'jasa_sum', 'jasa_sum.id_penjualan', '=', "{$salesTable}.{$salesKey}")
-            ->selectRaw('COALESCE(SUM(COALESCE(items_sum.total_penjualan, 0) - COALESCE(items_sum.total_hpp, 0) + COALESCE(jasa_sum.total_jasa, 0)), 0) as total')
+            ->selectRaw('COALESCE(SUM(COALESCE(items_sum.total_penjualan, 0) - COALESCE(items_sum.total_cost, 0) + COALESCE(jasa_sum.total_jasa, 0)), 0) as total')
             ->value('total');
 
         return (int) ($summary ?? 0);
@@ -590,7 +590,7 @@ class PenjualanReportResource extends BaseResource
         $salesKey = $penjualan->getKeyName();
 
         $itemsSub = DB::table('tb_penjualan_item')
-            ->selectRaw('id_penjualan, COALESCE(SUM(qty * hpp), 0) as total_hpp')
+            ->selectRaw('id_penjualan, COALESCE(SUM(qty * cost_price), 0) as total_cost')
             ->groupBy('id_penjualan');
 
         $summaryQuery = clone $query;
@@ -601,7 +601,7 @@ class PenjualanReportResource extends BaseResource
 
         $summary = $summaryQuery
             ->leftJoinSub($itemsSub, 'items_sum', 'items_sum.id_penjualan', '=', "{$salesTable}.{$salesKey}")
-            ->selectRaw('COALESCE(SUM(COALESCE(items_sum.total_hpp, 0)), 0) as total')
+            ->selectRaw('COALESCE(SUM(COALESCE(items_sum.total_cost, 0)), 0) as total')
             ->value('total');
 
         return (int) ($summary ?? 0);

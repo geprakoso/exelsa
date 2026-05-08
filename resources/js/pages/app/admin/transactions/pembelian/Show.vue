@@ -89,7 +89,8 @@ function deletePembelian() {
                                         <th class="px-3 py-2 text-center text-sm font-medium text-muted-foreground">Qty</th>
                                         <th class="px-3 py-2 text-center text-sm font-medium text-muted-foreground">Masuk</th>
                                         <th class="px-3 py-2 text-center text-sm font-medium text-muted-foreground">Sisa</th>
-                                        <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground">Price</th>
+                                        <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground">Cost (HPP)</th>
+                                        <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground">Selling Price</th>
                                         <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground">Subtotal</th>
                                     </tr>
                                 </thead>
@@ -102,13 +103,14 @@ function deletePembelian() {
                                         <td class="px-3 py-3 text-center">{{ item.qty }}</td>
                                         <td class="px-3 py-3 text-center">{{ item.qty_masuk || 0 }}</td>
                                         <td class="px-3 py-3 text-center">{{ item.qty_sisa || item.qty }}</td>
-                                        <td class="px-3 py-3 text-right">{{ formatCurrency(item.harga_jual) }}</td>
+                                        <td class="px-3 py-3 text-right">{{ formatCurrency(item.cost_price) }}</td>
+                                        <td class="px-3 py-3 text-right">{{ formatCurrency(item.selling_price) }}</td>
                                         <td class="px-3 py-3 text-right font-medium">
-                                            {{ formatCurrency((item.qty || 0) * (item.harga_jual || 0)) }}
+                                            {{ formatCurrency((item.qty || 0) * (item.cost_price || 0)) }}
                                         </td>
                                     </tr>
                                     <tr v-if="!pembelian?.items?.length">
-                                        <td colspan="6" class="px-3 py-4 text-center text-muted-foreground">
+                                        <td colspan="7" class="px-3 py-4 text-center text-muted-foreground">
                                             No items
                                         </td>
                                     </tr>
@@ -145,9 +147,19 @@ function deletePembelian() {
                                 <span>{{ formatDate(pembelian.tgl_tempo) }}</span>
                             </div>
                             
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Total Cost</span>
+                                <span>{{ formatCurrency(pembelian?.total_cost || 0) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Total Selling Price</span>
+                                <span>{{ formatCurrency(pembelian?.total_selling_price || 0) }}</span>
+                            </div>
                             <div class="flex justify-between text-lg font-bold pt-3 border-t">
-                                <span>Total</span>
-                                <span>{{ formatCurrency(pembelian?.harga_jual || 0) }}</span>
+                                <span>Margin</span>
+                                <span :class="(pembelian?.total_selling_price || 0) - (pembelian?.total_cost || 0) >= 0 ? 'text-green-600' : 'text-red-600'">
+                                    {{ formatCurrency((pembelian?.total_selling_price || 0) - (pembelian?.total_cost || 0)) }}
+                                </span>
                             </div>
                         </div>
                     </Card>

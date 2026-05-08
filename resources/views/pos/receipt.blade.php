@@ -349,8 +349,8 @@
                                 <span class="item-name">{{ $item->produk->nama_produk ?? 'Item Terhapus' }}</span>
                             </td>
                             <td class="center">{{ $item->qty }}</td>
-                            <td>Rp {{ number_format((float) ($item->harga_jual ?? 0), 0, ',', '.') }}</td>
-                            <td>Rp {{ number_format((float) ($item->qty * ($item->harga_jual ?? 0)), 0, ',', '.') }}</td>
+                            <td>Rp {{ number_format((float) ($item->selling_price ?? 0), 0, ',', '.') }}</td>
+                            <td>Rp {{ number_format((float) ($item->qty * ($item->selling_price ?? 0)), 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
 

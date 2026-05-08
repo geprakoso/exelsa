@@ -213,7 +213,7 @@ class TukarTambahResource extends BaseResource
                                                 // Update total price
                                                 $productTotal = collect($items)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $price = (int) ($item['harga_jual'] ?? 0);
+                                                    $price = (int) ($item['selling_price'] ?? 0);
 
                                                     return $qty * $price;
                                                 });
@@ -232,9 +232,9 @@ class TukarTambahResource extends BaseResource
                                                 $pembelianItems = $get('../../pembelian/items') ?? [];
                                                 $pembelianTotal = collect($pembelianItems)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $hpp = (int) ($item['hpp'] ?? 0);
+                                                    $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                                    return $qty * $hpp;
+                                                    return $qty * $costPrice;
                                                 });
                                                 $grandTotal = $total - $pembelianTotal;
                                                 // Set at root level using absolute path traversal
@@ -273,9 +273,9 @@ class TukarTambahResource extends BaseResource
                                                             // Get default price from oldest batch
                                                             $batch = \App\Filament\Resources\PenjualanResource::getOldestAvailableBatch($state);
                                                             if ($batch) {
-                                                                $set('harga_jual', $batch->harga_jual);
-                                                                $set('hpp', $batch->hpp);
-                                                                $set('kondisi', $batch->kondisi);
+$set('selling_price', $batch->selling_price);
+                                                                 $set('cost_price', $batch->cost_price);
+                                                                 $set('kondisi', $batch->kondisi);
                                                             }
                                                         }
                                                     }),
@@ -296,8 +296,8 @@ class TukarTambahResource extends BaseResource
                                                             // Get price for this condition
                                                             $batch = \App\Filament\Resources\PenjualanResource::getOldestAvailableBatch($productId, $state);
                                                             if ($batch) {
-                                                                $set('harga_jual', $batch->harga_jual);
-                                                                $set('hpp', $batch->hpp);
+$set('selling_price', $batch->selling_price);
+                                                                 $set('cost_price', $batch->cost_price);
                                                             }
                                                         }
                                                     }),
@@ -400,8 +400,8 @@ class TukarTambahResource extends BaseResource
                                                         $set('serials', $serials);
                                                     }),
 
-                                                TextInput::make('hpp')
-                                                    ->label('HPP')
+                                                TextInput::make('cost_price')
+                                                    ->label('Cost Price')
                                                     ->numeric()
                                                     ->prefix('Rp')
                                                     ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 0)
@@ -415,8 +415,8 @@ class TukarTambahResource extends BaseResource
 
                                                         // Attempt to fetch from database record if available
                                                         if ($record instanceof \App\Models\PenjualanItem) {
-                                                            if ($record->hpp > 0) {
-                                                                $component->state($record->hpp);
+                                                            if ($record->cost_price > 0) {
+                                                                $component->state($record->cost_price);
 
                                                                 return;
                                                             }
@@ -425,13 +425,13 @@ class TukarTambahResource extends BaseResource
                                                             if ($record->id_pembelian_item) {
                                                                 $batch = \App\Models\PembelianItem::find($record->id_pembelian_item);
                                                                 if ($batch) {
-                                                                    $component->state($batch->hpp);
+                                                                    $component->state($batch->cost_price);
                                                                 }
                                                             }
                                                         }
                                                     }),
 
-                                                TextInput::make('harga_jual')
+                                                TextInput::make('selling_price')
                                                     ->label('Harga Satuan')
                                                     ->prefix('Rp')
                                                     ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 0)
@@ -514,8 +514,8 @@ class TukarTambahResource extends BaseResource
                                                 'id_produk' => 'width: 30%;',
                                                 'kondisi' => 'width: 10%;',
                                                 'qty' => 'width: 10%;',
-                                                'hpp' => 'width: 15%;',
-                                                'harga_jual' => 'width: 15%;',
+                                                'cost_price' => 'width: 15%;',
+                                                'selling_price' => 'width: 15%;',
                                             ])
                                             ->defaultItems(1)
                                             ->reorderable(false)
@@ -535,7 +535,7 @@ class TukarTambahResource extends BaseResource
                                                 // Update total price
                                                 $productTotal = collect($items)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $price = (int) ($item['harga_jual'] ?? 0);
+                                                    $price = (int) ($item['selling_price'] ?? 0);
 
                                                     return $qty * $price;
                                                 });
@@ -554,9 +554,9 @@ class TukarTambahResource extends BaseResource
                                                 $pembelianItems = $get('../../../pembelian/items') ?? [];
                                                 $pembelianTotal = collect($pembelianItems)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $hpp = (int) ($item['hpp'] ?? 0);
+                                                    $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                                    return $qty * $hpp;
+                                                    return $qty * $costPrice;
                                                 });
                                                 $grandTotal = $total - $pembelianTotal;
                                                 // Set at root level - jasa_items is nested deeper
@@ -621,10 +621,10 @@ class TukarTambahResource extends BaseResource
                                                         $items = $get('items') ?? [];
                                                         $jasaItems = $get('jasa_items') ?? [];
 
-                                                        // Calculate product total: qty * harga_jual
+                                                        // Calculate product total: qty * selling_price
                                                         $productTotal = collect($items)->sum(function ($item) {
                                                             $qty = (int) ($item['qty'] ?? 0);
-                                                            $price = (int) ($item['harga_jual'] ?? 0);
+                                                            $price = (int) ($item['selling_price'] ?? 0);
 
                                                             return $qty * $price;
                                                         });
@@ -682,9 +682,9 @@ class TukarTambahResource extends BaseResource
 
                                                 $total = collect($items)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $hpp = (int) ($item['hpp'] ?? 0);
+                                                    $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                                    return $qty * $hpp;
+                                                    return $qty * $costPrice;
                                                 });
 
                                                 $set('total_pembelian_summary', number_format($total, 0, ',', '.'));
@@ -695,7 +695,7 @@ class TukarTambahResource extends BaseResource
 
                                                 $productTotal = collect($penjualanItems)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $price = (int) ($item['harga_jual'] ?? 0);
+                                                    $price = (int) ($item['selling_price'] ?? 0);
 
                                                     return $qty * $price;
                                                 });
@@ -745,9 +745,9 @@ class TukarTambahResource extends BaseResource
                                                         $items = $get('../../items') ?? [];
                                                         $total = collect($items)->sum(function ($item) {
                                                             $qty = (int) ($item['qty'] ?? 0);
-                                                            $hpp = (int) ($item['hpp'] ?? 0);
+                                                            $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                                            return $qty * $hpp;
+                                                            return $qty * $costPrice;
                                                         });
                                                         $set('../../total_pembelian_summary', number_format($total, 0, ',', '.'));
 
@@ -757,7 +757,7 @@ class TukarTambahResource extends BaseResource
 
                                                         $productTotal = collect($penjualanItems)->sum(function ($item) {
                                                             $qty = (int) ($item['qty'] ?? 0);
-                                                            $price = (int) ($item['harga_jual'] ?? 0);
+                                                            $price = (int) ($item['selling_price'] ?? 0);
 
                                                             return $qty * $price;
                                                         });
@@ -774,8 +774,8 @@ class TukarTambahResource extends BaseResource
                                                         // Set at root level
                                                         $set('../../../../grand_total_tukar_tambah', number_format($grandTotal, 0, ',', '.'));
                                                     }),
-                                                TextInput::make('hpp')
-                                                    ->label('HPP (Beli)')
+                                                TextInput::make('cost_price')
+                                                    ->label('Cost Price (Beli)')
                                                     ->prefix('Rp')
                                                     ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 0)
                                                     ->required()
@@ -788,9 +788,9 @@ class TukarTambahResource extends BaseResource
                                                         $items = $get('../../items') ?? [];
                                                         $total = collect($items)->sum(function ($item) {
                                                             $qty = (int) ($item['qty'] ?? 0);
-                                                            $hpp = (int) ($item['hpp'] ?? 0);
+                                                            $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                                            return $qty * $hpp;
+                                                            return $qty * $costPrice;
                                                         });
                                                         $set('../../total_pembelian_summary', number_format($total, 0, ',', '.'));
 
@@ -800,7 +800,7 @@ class TukarTambahResource extends BaseResource
 
                                                         $productTotal = collect($penjualanItems)->sum(function ($item) {
                                                             $qty = (int) ($item['qty'] ?? 0);
-                                                            $price = (int) ($item['harga_jual'] ?? 0);
+                                                            $price = (int) ($item['selling_price'] ?? 0);
 
                                                             return $qty * $price;
                                                         });
@@ -817,7 +817,7 @@ class TukarTambahResource extends BaseResource
                                                         // Set at root level
                                                         $set('../../../../grand_total_tukar_tambah', number_format($grandTotal, 0, ',', '.'));
                                                     }),
-                                                TextInput::make('harga_jual')
+                                                TextInput::make('selling_price')
                                                     ->label('Rencana Jual')
                                                     ->prefix('Rp')
                                                     ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 0)
@@ -831,8 +831,8 @@ class TukarTambahResource extends BaseResource
                                                 'id_produk' => 'width:37%',
                                                 'kondisi' => 'width:15%',
                                                 'qty' => 'width:8%',
-                                                'hpp' => 'width:20%',
-                                                'harga_jual' => 'width:25%',
+                                                'cost_price' => 'width:20%',
+                                                'selling_price' => 'width:25%',
                                             ]),
 
                                         // Summary for Pembelian
@@ -846,12 +846,12 @@ class TukarTambahResource extends BaseResource
                                             ->afterStateHydrated(function (Set $set, Get $get): void {
                                                 $items = $get('items') ?? [];
 
-                                                // Calculate total: qty * hpp
+                                                // Calculate total: qty * cost_price
                                                 $total = collect($items)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $hpp = (int) ($item['hpp'] ?? 0);
+                                                    $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                                    return $qty * $hpp;
+                                                    return $qty * $costPrice;
                                                 });
 
                                                 $set('total_pembelian_summary', number_format($total, 0, ',', '.'));
@@ -874,29 +874,29 @@ class TukarTambahResource extends BaseResource
                                 $penjualanItems = $get('penjualan.items') ?? [];
                                 $penjualanJasaItems = $get('penjualan.jasa_items') ?? [];
 
-                                $productTotal = collect($penjualanItems)->sum(function ($item) {
-                                    $qty = (int) ($item['qty'] ?? 0);
-                                    $price = (int) ($item['harga_jual'] ?? 0);
+$productTotal = collect($penjualanItems)->sum(function ($item) {
+                                        $qty = (int) ($item['qty'] ?? 0);
+                                        $price = (int) ($item['selling_price'] ?? 0);
 
-                                    return $qty * $price;
-                                });
+                                        return $qty * $price;
+                                    });
 
-                                $serviceTotal = collect($penjualanJasaItems)->sum(function ($item) {
-                                    $qty = (int) ($item['qty'] ?? 0);
-                                    $price = (int) ($item['harga'] ?? 0);
+                                    $serviceTotal = collect($penjualanJasaItems)->sum(function ($item) {
+                                        $qty = (int) ($item['qty'] ?? 0);
+                                        $price = (int) ($item['harga'] ?? 0);
 
-                                    return $qty * $price;
-                                });
+                                        return $qty * $price;
+                                    });
 
-                                $penjualanTotal = $productTotal + $serviceTotal;
+                                    $penjualanTotal = $productTotal + $serviceTotal;
 
-                                // Calculate Pembelian total from items
-                                $pembelianItems = $get('pembelian.items') ?? [];
-                                $pembelianTotal = collect($pembelianItems)->sum(function ($item) {
-                                    $qty = (int) ($item['qty'] ?? 0);
-                                    $hpp = (int) ($item['hpp'] ?? 0);
+                                    // Calculate Pembelian total from items
+                                    $pembelianItems = $get('pembelian.items') ?? [];
+                                    $pembelianTotal = collect($pembelianItems)->sum(function ($item) {
+                                        $qty = (int) ($item['qty'] ?? 0);
+                                        $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                    return $qty * $hpp;
+                                        return $qty * $costPrice;
                                 });
 
                                 // Calculate grand total
@@ -994,7 +994,7 @@ class TukarTambahResource extends BaseResource
 
                                                 $productTotal = collect($items)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $price = (int) ($item['harga_jual'] ?? 0);
+                                                    $price = (int) ($item['selling_price'] ?? 0);
 
                                                     return $qty * $price;
                                                 });
@@ -1016,9 +1016,9 @@ class TukarTambahResource extends BaseResource
 
                                                 $total = collect($items)->sum(function ($item) {
                                                     $qty = (int) ($item['qty'] ?? 0);
-                                                    $hpp = (int) ($item['hpp'] ?? 0);
+                                                    $costPrice = (int) ($item['cost_price'] ?? 0);
 
-                                                    return $qty * $hpp;
+                                                    return $qty * $costPrice;
                                                 });
 
                                                 return $total > 0 ? 'Saran: Rp ' . number_format($total, 0, ',', '.') : 'Total Pembelian';
@@ -1544,7 +1544,7 @@ class TukarTambahResource extends BaseResource
     {
         $batch = self::getOldestAvailableBatch($productId, $condition);
 
-        return $batch?->harga_jual;
+        return $batch?->selling_price;
     }
 
     protected static function getOldestAvailableBatch(?int $productId, ?string $condition = null): ?PembelianItem
@@ -1703,7 +1703,7 @@ class TukarTambahResource extends BaseResource
                                         if (! $penjualan) {
                                             return 0;
                                         }
-                                        $productTotal = $penjualan->items->sum(fn($item) => ($item->qty ?? 0) * ($item->harga_jual ?? 0));
+                                        $productTotal = $penjualan->items->sum(fn($item) => ($item->qty ?? 0) * ($item->selling_price ?? 0));
                                         $serviceTotal = $penjualan->jasaItems->sum(fn($item) => ($item->qty ?? 0) * ($item->harga ?? 0));
                                         $diskon = (int) ($penjualan->diskon_total ?? 0);
 
@@ -1727,7 +1727,7 @@ class TukarTambahResource extends BaseResource
                                             return 0;
                                         }
 
-                                        return $pembelian->items->sum(fn($item) => ($item->qty ?? 0) * ($item->hpp ?? 0));
+                                        return $pembelian->items->sum(fn($item) => ($item->qty ?? 0) * ($item->cost_price ?? 0));
                                     })
                                     ->numeric(
                                         decimalPlaces: 0,
@@ -1749,7 +1749,7 @@ class TukarTambahResource extends BaseResource
 
                                         $penjualanTotal = 0;
                                         if ($penjualan) {
-                                            $productTotal = $penjualan->items->sum(fn($item) => ($item->qty ?? 0) * ($item->harga_jual ?? 0));
+                                            $productTotal = $penjualan->items->sum(fn($item) => ($item->qty ?? 0) * ($item->selling_price ?? 0));
                                             $serviceTotal = $penjualan->jasaItems->sum(fn($item) => ($item->qty ?? 0) * ($item->harga ?? 0));
                                             $diskon = (int) ($penjualan->diskon_total ?? 0);
                                             $penjualanTotal = max(0, ($productTotal + $serviceTotal) - $diskon);
@@ -1757,7 +1757,7 @@ class TukarTambahResource extends BaseResource
 
                                         $pembelianTotal = 0;
                                         if ($pembelian) {
-                                            $pembelianTotal = $pembelian->items->sum(fn($item) => ($item->qty ?? 0) * ($item->hpp ?? 0));
+                                            $pembelianTotal = $pembelian->items->sum(fn($item) => ($item->qty ?? 0) * ($item->cost_price ?? 0));
                                         }
 
                                         return $penjualanTotal - $pembelianTotal;
@@ -1932,12 +1932,12 @@ class TukarTambahResource extends BaseResource
     protected static function calculateGrandTotal(TukarTambah $record): int
     {
         // Calculate Penjualan total (products + services)
-        $productTotal = $record->penjualan?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->harga_jual ?? 0)) ?? 0;
+        $productTotal = $record->penjualan?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->selling_price ?? 0)) ?? 0;
         $serviceTotal = $record->penjualan?->jasaItems?->sum(fn($jasa) => (int) ($jasa->qty ?? 0) * (int) ($jasa->harga ?? 0)) ?? 0;
         $penjualanTotal = $productTotal + $serviceTotal;
 
-        // Calculate Pembelian total (qty * hpp)
-        $pembelianTotal = $record->pembelian?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->hpp ?? 0)) ?? 0;
+        // Calculate Pembelian total (qty * cost_price)
+        $pembelianTotal = $record->pembelian?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->cost_price ?? 0)) ?? 0;
 
         // Grand Total = Penjualan - Pembelian
         return $penjualanTotal - $pembelianTotal;
@@ -1949,12 +1949,12 @@ class TukarTambahResource extends BaseResource
     protected static function calculatePaymentStatus(TukarTambah $record): string
     {
         // Calculate Penjualan total (products + services)
-        $productTotal = $record->penjualan?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->harga_jual ?? 0)) ?? 0;
+        $productTotal = $record->penjualan?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->selling_price ?? 0)) ?? 0;
         $serviceTotal = $record->penjualan?->jasaItems?->sum(fn($jasa) => (int) ($jasa->qty ?? 0) * (int) ($jasa->harga ?? 0)) ?? 0;
         $totalPenjualan = $productTotal + $serviceTotal;
 
-        // Calculate Pembelian total (qty * hpp)
-        $totalPembelian = $record->pembelian?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->hpp ?? 0)) ?? 0;
+        // Calculate Pembelian total (qty * cost_price)
+        $totalPembelian = $record->pembelian?->items?->sum(fn($item) => (int) ($item->qty ?? 0) * (int) ($item->cost_price ?? 0)) ?? 0;
 
         // Calculate total paid for penjualan and pembelian
         $totalDibayarPenjualan = $record->penjualan?->pembayaran?->sum('jumlah') ?? 0;

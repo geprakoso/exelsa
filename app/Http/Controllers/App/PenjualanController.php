@@ -59,6 +59,17 @@ class PenjualanController extends Controller
             'penjualans' => $penjualans,
             'stats' => $stats,
             'filters' => $request->only(['from', 'to', 'status', 'search']),
+            'members' => Member::orderBy('nama_member')->get(['id', 'kode_member', 'nama_member']),
+            'karyawans' => Karyawan::orderBy('nama_karyawan')->get(['id', 'nama_karyawan']),
+            'gudangs' => Gudang::orderBy('nama_gudang')->get(['id', 'nama_gudang']),
+            'produks' => Produk::with(['brand', 'kategori'])->orderBy('nama_produk')->get(['id', 'nama_produk', 'sku']),
+            'paymentAccounts' => AkunTransaksi::where('jenis', 'kas')->orWhere('jenis', 'bank')->orderBy('nama_akun')->get(['id', 'kode_akun', 'nama_akun', 'jenis']),
+            'metodeBayarOptions' => [
+                ['value' => 'cash', 'label' => 'Cash'],
+                ['value' => 'card', 'label' => 'Kartu'],
+                ['value' => 'transfer', 'label' => 'Transfer'],
+                ['value' => 'ewallet', 'label' => 'E-Wallet'],
+            ],
         ]);
     }
 
@@ -112,7 +123,7 @@ class PenjualanController extends Controller
             'items' => 'required|array|min:1',
             'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
-            'items.*.harga_jual' => 'required|numeric|min:0',
+            'items.*.selling_price' => 'required|numeric|min:0',
             'pembayarans' => 'nullable|array',
             'pembayarans.*.metode_bayar' => 'required_with:pembayarans|string',
             'pembayarans.*.akun_transaksi_id' => 'nullable|exists:akun_transaksis,id',
@@ -130,7 +141,7 @@ class PenjualanController extends Controller
 
         // Calculate totals
         $itemsTotal = collect($validated['items'])->sum(function ($item) {
-            return $item['qty'] * $item['harga_jual'];
+            return $item['qty'] * $item['selling_price'];
         });
         
         $diskonTotal = $validated['diskon_total'] ?? 0;
@@ -156,7 +167,7 @@ class PenjualanController extends Controller
                 'id_penjualan' => $penjualan->id_penjualan,
                 'id_produk' => $itemData['id_produk'],
                 'qty' => $itemData['qty'],
-                'harga_jual' => $itemData['harga_jual'],
+                'selling_price' => $itemData['selling_price'],
             ]);
         }
 
@@ -250,12 +261,12 @@ class PenjualanController extends Controller
             'items.*.id' => 'nullable|exists:tb_penjualan_item,id_penjualan_item',
             'items.*.id_produk' => 'required|exists:md_produk,id',
             'items.*.qty' => 'required|integer|min:1',
-            'items.*.harga_jual' => 'required|numeric|min:0',
+            'items.*.selling_price' => 'required|numeric|min:0',
         ]);
 
         // Calculate totals
         $itemsTotal = collect($validated['items'])->sum(function ($item) {
-            return $item['qty'] * $item['harga_jual'];
+            return $item['qty'] * $item['selling_price'];
         });
         
         $diskonTotal = $validated['diskon_total'] ?? 0;
@@ -287,7 +298,7 @@ class PenjualanController extends Controller
                 $item->update([
                     'id_produk' => $itemData['id_produk'],
                     'qty' => $itemData['qty'],
-                    'harga_jual' => $itemData['harga_jual'],
+                    'selling_price' => $itemData['selling_price'],
                 ]);
             } else {
                 // Create new
@@ -295,7 +306,7 @@ class PenjualanController extends Controller
                     'id_penjualan' => $penjualan->id_penjualan,
                     'id_produk' => $itemData['id_produk'],
                     'qty' => $itemData['qty'],
-                    'harga_jual' => $itemData['harga_jual'],
+                    'selling_price' => $itemData['selling_price'],
                 ]);
             }
         }

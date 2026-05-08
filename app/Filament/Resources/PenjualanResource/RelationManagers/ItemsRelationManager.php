@@ -54,7 +54,7 @@ class ItemsRelationManager extends RelationManager
                 ->native(false)
                 ->disabledOn(['edit'])
                 ->afterStateUpdated(function (Set $set, ?int $state, Get $get): void {
-                    $set('harga_jual', null);
+                    $set('selling_price', null);
                     $options = $this->getConditionOptions((int) ($state ?? 0));
                     $selected = null;
 
@@ -67,7 +67,7 @@ class ItemsRelationManager extends RelationManager
                         $selected = $get('kondisi');
                     }
 
-                    $set('harga_jual', $this->getDefaultPriceForProduct((int) ($state ?? 0), $selected));
+                    $set('selling_price', $this->getDefaultPriceForProduct((int) ($state ?? 0), $selected));
                 }),
             Select::make('kondisi')
                 ->label('Kondisi')
@@ -105,7 +105,7 @@ class ItemsRelationManager extends RelationManager
                 })
                 ->afterStateUpdated(function (Set $set, ?string $state, Get $get): void {
                     $productId = (int) ($get('id_produk') ?? 0);
-                    $set('harga_jual', $this->getDefaultPriceForProduct($productId, $state));
+                    $set('selling_price', $this->getDefaultPriceForProduct($productId, $state));
                 })
                 ->nullable(),
             TextInput::make('qty')
@@ -129,7 +129,7 @@ class ItemsRelationManager extends RelationManager
                     $qty = (int) ($state ?? 0);
                     $set('serials', $this->normalizeSerials($get('serials'), $qty));
                 }),
-            TextInput::make('harga_jual')
+            TextInput::make('selling_price')
                 ->label('Harga Jual')
                 ->numeric()
                 ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 0)
@@ -209,7 +209,7 @@ class ItemsRelationManager extends RelationManager
                     ->label('Qty')
                     ->numeric()
                     ->extraAttributes(['style' => 'width: 80px;']),
-                TextColumn::make('harga_jual')
+                TextColumn::make('selling_price')
                     ->label('Harga Jual')
                     ->formatStateUsing(fn($state) => 'Rp ' . number_format((int) ($state ?? 0), 0, ',', '.')),
                 TextColumn::make('kondisi')
@@ -251,7 +251,7 @@ class ItemsRelationManager extends RelationManager
             ]);
         }
 
-        $customPrice = $data['harga_jual'] ?? null;
+        $customPrice = $data['selling_price'] ?? null;
         $customPrice = ($customPrice === '' || $customPrice === null) ? null : (int) $customPrice;
         $condition = $data['kondisi'] ?? null;
         $serials = is_array($data['serials'] ?? null) ? $data['serials'] : [];
@@ -326,7 +326,7 @@ class ItemsRelationManager extends RelationManager
                 'id_produk' => $productId,
                 'id_pembelian_item' => $batch->getKey(),
                 'qty' => $takeQty,
-                'harga_jual' => $customPrice,
+                'selling_price' => $customPrice,
                 'kondisi' => $condition,
                 'serials' => empty($takeSerials) ? null : $takeSerials,
             ]);
@@ -378,7 +378,7 @@ class ItemsRelationManager extends RelationManager
     {
         $batch = $this->getOldestAvailableBatch($productId, $condition);
 
-        return $batch?->harga_jual;
+        return $batch?->selling_price;
     }
 
     protected function getAvailableQty(int $productId, ?string $condition): int

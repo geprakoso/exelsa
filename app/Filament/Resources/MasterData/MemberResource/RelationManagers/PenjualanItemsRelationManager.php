@@ -50,14 +50,14 @@ class PenjualanItemsRelationManager extends RelationManager
                     ->color('gray')
                     ->alignCenter(),
 
-                Tables\Columns\TextColumn::make('harga_jual')
+                Tables\Columns\TextColumn::make('selling_price')
                     ->label('Harga Satuan')
                     ->formatStateUsing(fn($state) => 'Rp ' . number_format((int) ($state ?? 0), 0, ',', '.'))
                     ->alignRight(),
 
                 Tables\Columns\TextColumn::make('total_row')
                     ->label('Total')
-                    ->state(fn($record) => $record->qty * $record->harga_jual)
+                    ->state(fn($record) => $record->qty * $record->selling_price)
                     ->formatStateUsing(fn($state) => 'Rp ' . number_format((int) ($state ?? 0), 0, ',', '.'))
                     ->weight('bold')
                     ->alignRight()

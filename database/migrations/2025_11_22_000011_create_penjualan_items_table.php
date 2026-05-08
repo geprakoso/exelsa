@@ -18,8 +18,8 @@ return new class extends Migration
                 ->restrictOnDelete();
             $table->foreignId('id_pembelian_item');
             $table->unsignedInteger('qty');
-            $table->decimal('hpp', 15, 2)->default(0);
-            $table->decimal('harga_jual', 15, 2)->default(0);
+            $table->decimal('cost_price', 15, 2)->default(0);
+            $table->decimal('selling_price', 15, 2)->default(0);
             $table->enum('kondisi', ['baru', 'bekas'])->default('baru');
             $table->timestamps();
         });

@@ -338,7 +338,7 @@ class LaporanNeracaResource extends BaseResource
             ->leftJoin($pembelianTable, "{$pembelianTable}.id_pembelian", '=', "{$pembelianItemTable}.id_pembelian")
             ->whereDate("{$pembelianTable}.tanggal", '<=', $asOf)
             ->where("{$pembelianItemTable}.{$qtyColumn}", '>', 0)
-            ->selectRaw("SUM(COALESCE({$pembelianItemTable}.hpp, 0) * COALESCE({$pembelianItemTable}.{$qtyColumn}, 0)) as total")
+            ->selectRaw("SUM(COALESCE({$pembelianItemTable}.cost_price, 0) * COALESCE({$pembelianItemTable}.{$qtyColumn}, 0)) as total")
             ->value('total');
 
         return (float) ($total ?? 0);

@@ -61,7 +61,7 @@ class LaporanLabaRugiResource extends BaseResource
                 TextColumn::make('total_penjualan')
                     ->label('Pendapatan')
                     ->formatStateUsing(fn ($state) => money($state, 'IDR')->formatWithoutZeroes()),
-                TextColumn::make('total_hpp')
+                TextColumn::make('total_cost')
                     ->label('Beban Pokok Penjualan')
                     ->formatStateUsing(fn ($state) => money($state, 'IDR')->formatWithoutZeroes()),
                 TextColumn::make('total_beban')
@@ -102,7 +102,7 @@ class LaporanLabaRugiResource extends BaseResource
                         TextEntry::make('total_penjualan')
                             ->label('Pendapatan')
                             ->formatStateUsing(fn ($state) => money($state, 'IDR')->formatWithoutZeroes()),
-                        TextEntry::make('total_hpp')
+                        TextEntry::make('total_cost')
                             ->label('Beban Pokok Penjualan')
                             ->formatStateUsing(fn ($state) => money($state, 'IDR')->formatWithoutZeroes()),
                         TextEntry::make('laba_kotor')
@@ -174,7 +174,7 @@ class LaporanLabaRugiResource extends BaseResource
         $hppSub = Pembelian::query()
             ->selectRaw("DATE_FORMAT({$pembelianTable}.tanggal, '%Y-%m-01') as month_start")
             ->selectRaw("DATE_FORMAT({$pembelianTable}.tanggal, '%Y-%m') as month_key")
-            ->selectRaw("SUM({$itemsTable}.hpp * COALESCE(sold_items.qty_terjual, 0)) as total_hpp")
+            ->selectRaw("SUM({$itemsTable}.cost_price * COALESCE(sold_items.qty_terjual, 0)) as total_cost")
             ->join($itemsTable, "{$itemsTable}.id_pembelian", '=', "{$pembelianTable}.id_pembelian")
             ->joinSub(
                 DB::table($penjualanItemsTable)
@@ -202,7 +202,7 @@ class LaporanLabaRugiResource extends BaseResource
         $penjualanSub = Penjualan::query()
             ->selectRaw("DATE_FORMAT({$penjualanTable}.tanggal_penjualan, '%Y-%m-01') as month_start")
             ->selectRaw("DATE_FORMAT({$penjualanTable}.tanggal_penjualan, '%Y-%m') as month_key")
-            ->selectRaw("SUM({$penjualanItemsTable}.harga_jual * {$penjualanItemsTable}.qty) as total_penjualan")
+            ->selectRaw("SUM({$penjualanItemsTable}.selling_price * {$penjualanItemsTable}.qty) as total_penjualan")
             ->join($penjualanItemsTable, "{$penjualanItemsTable}.id_penjualan", '=', "{$penjualanTable}.id_penjualan")
             ->groupBy('month_start', 'month_key');
 
@@ -213,7 +213,7 @@ class LaporanLabaRugiResource extends BaseResource
             ->join($penjualanJasaTable, "{$penjualanJasaTable}.id_penjualan", '=', "{$penjualanTable}.id_penjualan")
             ->groupBy('month_start', 'month_key');
 
-        $monthsSub = DB::query()->fromSub($hppSub, 'hpp')
+        $monthsSub = DB::query()->fromSub($hppSub, 'cost')
             ->select('month_start', 'month_key')
             ->union(
                 DB::query()->fromSub($bebanSub, 'beban')->select('month_start', 'month_key')
@@ -227,18 +227,18 @@ class LaporanLabaRugiResource extends BaseResource
 
         return LaporanLabaRugi::query()
             ->fromSub($monthsSub, $reportTable)
-            ->leftJoinSub($hppSub, 'hpp', 'hpp.month_key', '=', "{$reportTable}.month_key")
+            ->leftJoinSub($hppSub, 'cost', 'cost.month_key', '=', "{$reportTable}.month_key")
             ->leftJoinSub($bebanSub, 'beban', 'beban.month_key', '=', "{$reportTable}.month_key")
             ->leftJoinSub($penjualanSub, 'penjualan', 'penjualan.month_key', '=', "{$reportTable}.month_key")
             ->leftJoinSub($penjualanJasaSub, 'penjualan_jasa', 'penjualan_jasa.month_key', '=', "{$reportTable}.month_key")
             ->select([
                 "{$reportTable}.month_key",
                 "{$reportTable}.month_start",
-                DB::raw('COALESCE(hpp.total_hpp, 0) as total_hpp'),
+                DB::raw('COALESCE(cost.total_cost, 0) as total_cost'),
                 DB::raw('COALESCE(beban.total_beban, 0) as total_beban'),
                 DB::raw('(COALESCE(penjualan.total_penjualan, 0) + COALESCE(penjualan_jasa.total_penjualan_jasa, 0)) as total_penjualan'),
-                DB::raw('((COALESCE(penjualan.total_penjualan, 0) + COALESCE(penjualan_jasa.total_penjualan_jasa, 0)) - COALESCE(hpp.total_hpp, 0)) as laba_kotor'),
-                DB::raw('((COALESCE(penjualan.total_penjualan, 0) + COALESCE(penjualan_jasa.total_penjualan_jasa, 0)) - (COALESCE(hpp.total_hpp, 0) + COALESCE(beban.total_beban, 0))) as laba_rugi'),
+                DB::raw('((COALESCE(penjualan.total_penjualan, 0) + COALESCE(penjualan_jasa.total_penjualan_jasa, 0)) - COALESCE(cost.total_cost, 0)) as laba_kotor'),
+                DB::raw('((COALESCE(penjualan.total_penjualan, 0) + COALESCE(penjualan_jasa.total_penjualan_jasa, 0)) - (COALESCE(cost.total_cost, 0) + COALESCE(beban.total_beban, 0))) as laba_rugi'),
             ])
             ->orderByDesc("{$reportTable}.month_start");
     }

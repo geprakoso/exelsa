@@ -15,7 +15,7 @@ TukarTambah
 │   ├── items (produk yang dijual)
 │   │   ├── id_produk
 │   │   ├── qty
-│   │   ├── harga_jual
+│   │   ├── selling_price
 │   │   └── kondisi
 │   ├── jasa_items (layanan tambahan)
 │   │   ├── jasa_id
@@ -26,8 +26,8 @@ TukarTambah
     ├── items (barang yang dibeli)
     │   ├── id_produk
     │   ├── qty
-    │   ├── hpp (Harga Pokok Pembelian)
-    │   ├── harga_jual (rencana jual)
+    │   ├── cost_price (Harga Pokok Pembelian)
+    │   ├── selling_price (rencana jual)
     │   └── kondisi
     └── pembayaran
 ```
@@ -44,10 +44,10 @@ Grand Total = Total Penjualan - Total Pembelian
 
 ```php
 // Total Penjualan
-$penjualanTotal = Σ(items: qty × harga_jual) + Σ(jasa_items: qty × harga)
+$penjualanTotal = Σ(items: qty × selling_price) + Σ(jasa_items: qty × harga)
 
 // Total Pembelian  
-$pembelianTotal = Σ(items: qty × hpp)
+$pembelianTotal = Σ(items: qty × cost_price)
 
 // Grand Total
 $grandTotal = $penjualanTotal - $pembelianTotal
@@ -88,7 +88,7 @@ Placeholder::make('grand_total_tukar_tambah')
         $penjualanJasaItems = $get('penjualan.jasa_items') ?? [];
         
         $productTotal = collect($penjualanItems)->sum(fn ($item) => 
-            (int)($item['qty'] ?? 0) * (int)($item['harga_jual'] ?? 0)
+            (int)($item['qty'] ?? 0) * (int)($item['selling_price'] ?? 0)
         );
         
         $serviceTotal = collect($penjualanJasaItems)->sum(fn ($item) => 
@@ -98,7 +98,7 @@ Placeholder::make('grand_total_tukar_tambah')
         // Calculate Pembelian total
         $pembelianItems = $get('pembelian.items') ?? [];
         $pembelianTotal = collect($pembelianItems)->sum(fn ($item) =>
-            (int)($item['qty'] ?? 0) * (int)($item['hpp'] ?? 0)
+            (int)($item['qty'] ?? 0) * (int)($item['cost_price'] ?? 0)
         );
         
         $grandTotal = ($productTotal + $serviceTotal) - $pembelianTotal;
@@ -152,7 +152,7 @@ Hidden::make('id_supplier')
 - Pastikan menggunakan `Placeholder` dengan `content()` callback
 - Gunakan absolute path: `penjualan.items`, `pembelian.items`
 
-### Typing terganggu di field hpp/qty
+### Typing terganggu di field cost_price/qty
 - Gunakan `lazy()` bukan `reactive()` pada TextInput
 - `lazy()` update saat blur, bukan setiap keystroke
 

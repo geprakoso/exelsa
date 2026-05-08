@@ -17,7 +17,7 @@
                 <th class="w-[20rem] px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Produk</th>
                 <th class="w-[8rem] px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200">Kondisi</th>
                 <th class="w-[5rem] px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200">Qty</th>
-                <th class="w-[10rem] px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">HPP (Beli)</th>
+                <th class="w-[10rem] px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Cost Price (Beli)</th>
                 <th class="w-[10rem] px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Subtotal</th>
                 <th class="w-[8rem] px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200">Aksi</th>
             </tr>
@@ -37,9 +37,9 @@
                     $badgeColor = $badgeMap[strtolower($condition ?? '')] ?? 'gray';
                     $conditionLabel = $condition ? ucfirst((string) $condition) : '-';
 
-                    $hpp = (float) (data_get($item, 'hpp') ?? 0);
+                    $costPrice = (float) (data_get($item, 'cost_price') ?? 0);
                     $qty = (int) (data_get($item, 'qty') ?? 0);
-                    $subtotal = $qty * $hpp;
+                    $subtotal = $qty * $costPrice;
 
                     $pembelianItemId = data_get($item, 'id');
                     $produkId = data_get($item, 'id_produk');
@@ -60,7 +60,7 @@
                         {{ number_format($qty, 0, ',', '.') }}
                     </td>
                     <td class="px-4 py-3 text-right text-gray-800 dark:text-gray-100 whitespace-nowrap">
-                        Rp {{ number_format($hpp, 0, ',', '.') }}
+                        Rp {{ number_format($costPrice, 0, ',', '.') }}
                     </td>
                     <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                         Rp {{ number_format($subtotal, 0, ',', '.') }}

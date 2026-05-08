@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id('id_pembelian');
             $table->string('no_po')->unique();
             $table->date('tanggal');
-            $table->decimal('harga_jual', 15, 2)->default(0);
+            $table->decimal('total_amount', 15, 2)->default(0);
+            $table->decimal('total_selling_price', 15, 2)->default(0);
             $table->text('catatan')->nullable();
             $table->enum('tipe_pembelian', ['ppn', 'non_ppn'])->default('non_ppn');
             $table->enum('jenis_pembayaran', ['lunas', 'tempo'])->default('lunas');

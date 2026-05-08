@@ -30,7 +30,8 @@ interface ItemRow {
     id?: number
     id_produk: number | null
     qty: number
-    harga: number
+    cost_price: number
+    selling_price: number
 }
 
 function formatDateInput(value: any): string {
@@ -52,34 +53,42 @@ const form = ref({
         id: item.id_pembelian_item,
         id_produk: item.id_produk,
         qty: item.qty,
-        harga: item.harga_jual || 0,
+        cost_price: item.cost_price || 0,
+        selling_price: item.selling_price || 0,
     })) as ItemRow[],
 })
 
 const errors = ref<Record<string, string>>({})
 
-// Calculate totals
-const total = computed(() => {
+const totalCost = computed(() => {
     return form.value.items.reduce((sum, item) => {
-        return sum + (item.qty * item.harga)
+        return sum + (item.qty * item.cost_price)
     }, 0)
 })
 
-// Add item row
+const totalSellingPrice = computed(() => {
+    return form.value.items.reduce((sum, item) => {
+        return sum + (item.qty * item.selling_price)
+    }, 0)
+})
+
+const margin = computed(() => {
+    return totalSellingPrice.value - totalCost.value
+})
+
 function addItem() {
     form.value.items.push({
         id_produk: null,
         qty: 1,
-        harga: 0,
+        cost_price: 0,
+        selling_price: 0,
     })
 }
 
-// Remove item row
 function removeItem(index: number) {
     form.value.items.splice(index, 1)
 }
 
-// Auto-fill harga when product selected
 function onProductSelect(item: ItemRow, produk: ProdukOption) {
     item.id_produk = produk.id
 }
@@ -92,7 +101,6 @@ function formatCurrency(value: number) {
     }).format(value)
 }
 
-// Submit form
 function submit() {
     errors.value = {}
     
@@ -120,7 +128,8 @@ function submit() {
             id: item.id,
             id_produk: item.id_produk,
             qty: item.qty,
-            harga: item.harga,
+            cost_price: item.cost_price,
+            selling_price: item.selling_price,
         })),
     }, {
         onError: (err) => {
@@ -177,9 +186,10 @@ function submit() {
                                 <table class="w-full">
                                     <thead class="bg-muted/50 border-b">
                                         <tr>
-                                            <th class="px-3 py-2 text-left text-sm font-medium text-muted-foreground w-1/2">Product</th>
-                                            <th class="px-3 py-2 text-center text-sm font-medium text-muted-foreground w-20">Qty</th>
-                                            <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground w-32">Price</th>
+                                            <th class="px-3 py-2 text-left text-sm font-medium text-muted-foreground w-2/5">Product</th>
+                                            <th class="px-3 py-2 text-center text-sm font-medium text-muted-foreground w-16">Qty</th>
+                                            <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground w-28">Cost</th>
+                                            <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground w-28">Price</th>
                                             <th class="px-3 py-2 text-right text-sm font-medium text-muted-foreground w-32">Subtotal</th>
                                             <th class="px-3 py-2 w-12"></th>
                                         </tr>
@@ -204,14 +214,22 @@ function submit() {
                                             </td>
                                             <td class="px-3 py-2">
                                                 <Input
-                                                    v-model.number="item.harga"
+                                                    v-model.number="item.cost_price"
+                                                    type="number"
+                                                    min="0"
+                                                    class="text-right"
+                                                />
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <Input
+                                                    v-model.number="item.selling_price"
                                                     type="number"
                                                     min="0"
                                                     class="text-right"
                                                 />
                                             </td>
                                             <td class="px-3 py-2 text-right font-medium">
-                                                {{ formatCurrency(item.qty * item.harga) }}
+                                                {{ formatCurrency(item.qty * item.cost_price) }}
                                             </td>
                                             <td class="px-3 py-2">
                                                 <Button
@@ -311,8 +329,16 @@ function submit() {
                             
                             <div class="space-y-3">
                                 <div class="flex justify-between">
-                                    <span class="text-muted-foreground">Total</span>
-                                    <span class="text-lg font-bold">{{ formatCurrency(total) }}</span>
+                                    <span class="text-muted-foreground">Total Cost</span>
+                                    <span>{{ formatCurrency(totalCost) }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">Total Selling Price</span>
+                                    <span>{{ formatCurrency(totalSellingPrice) }}</span>
+                                </div>
+                                <div class="flex justify-between text-lg font-bold pt-3 border-t">
+                                    <span>Margin</span>
+                                    <span :class="margin >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatCurrency(margin) }}</span>
                                 </div>
                             </div>
                             

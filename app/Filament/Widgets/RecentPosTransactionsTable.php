@@ -61,7 +61,7 @@ class RecentPosTransactionsTable extends AdvancedTableWidget
                 Tables\Columns\TextColumn::make('grand_total')
                     ->label('Total')
                     ->formatStateUsing(function ($state, Penjualan $record) {
-                        $produkTotal = $record->items->sum(fn($item) => (int) ($item->harga_jual ?? 0) * (int) ($item->qty ?? 0));
+                        $produkTotal = $record->items->sum(fn($item) => (int) ($item->selling_price ?? 0) * (int) ($item->qty ?? 0));
                         $jasaTotal = $record->jasaItems->sum(fn($service) => (int) ($service->harga ?? 0));
                         $diskon = (int) ($record->diskon_total ?? 0);
                         $computed = max(0, ($produkTotal + $jasaTotal) - $diskon);

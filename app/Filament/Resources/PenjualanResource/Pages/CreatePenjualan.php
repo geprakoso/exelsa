@@ -77,7 +77,7 @@ class CreatePenjualan extends CreateRecord
         foreach ($items as $item) {
             $productId = (int) ($item['id_produk'] ?? 0);
             $qty = (int) ($item['qty'] ?? 0);
-            $customPrice = $item['harga_jual'] ?? null;
+            $customPrice = $item['selling_price'] ?? null;
             $condition = $item['kondisi'] ?? null;
             $batchId = (int) ($item['id_pembelian_item'] ?? 0);
             $serials = is_array($item['serials'] ?? null) ? array_values($item['serials']) : [];
@@ -114,7 +114,7 @@ class CreatePenjualan extends CreateRecord
                     'id_produk' => $productId,
                     'id_pembelian_item' => $batch->id_pembelian_item,
                     'qty' => $qty,
-                    'harga_jual' => $customPrice,
+                    'selling_price' => $customPrice,
                     'kondisi' => $batch->kondisi,
                     'serials' => empty($takeSerials) ? null : $takeSerials,
                 ]);
@@ -169,7 +169,7 @@ class CreatePenjualan extends CreateRecord
                     'id_produk' => $productId,
                     'id_pembelian_item' => $batch->id_pembelian_item,
                     'qty' => $takeQty,
-                    'harga_jual' => $customPrice,
+                    'selling_price' => $customPrice,
                     'kondisi' => $condition ?? $batch->kondisi,
                     'serials' => empty($takeSerials) ? null : $takeSerials,
                 ]);

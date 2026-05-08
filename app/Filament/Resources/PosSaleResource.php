@@ -113,7 +113,7 @@ class PosSaleResource extends BaseResource
                                                 ->reactive()
                                                 ->afterStateUpdated(function (Set $set, ?int $state, Get $get): void {
                                                     if (! $state) {
-                                                        $set('harga_jual', null);
+                                                        $set('selling_price', null);
                                                         $set('kondisi', null);
                                                         return;
                                                     }
@@ -130,7 +130,7 @@ class PosSaleResource extends BaseResource
                                                         $set('kondisi', null);
                                                     }
 
-                                                    $set('harga_jual', PosSaleResource::getDefaultPriceForProduct($state, $selectedCondition));
+                                                    $set('selling_price', PosSaleResource::getDefaultPriceForProduct($state, $selectedCondition));
                                                 })
                                                 ->required(),
                                             Forms\Components\TextInput::make('qty')
@@ -139,7 +139,7 @@ class PosSaleResource extends BaseResource
                                                 ->default(1)
                                                 ->minValue(1)
                                                 ->required(),
-                                            Forms\Components\TextInput::make('harga_jual')
+                                            Forms\Components\TextInput::make('selling_price')
                                                 ->label('Harga')
                                                 ->numeric()
                                                 ->currencyMask(
@@ -192,7 +192,7 @@ class PosSaleResource extends BaseResource
                                                         return;
                                                     }
 
-                                                    $set('harga_jual', PosSaleResource::getDefaultPriceForProduct($productId, $state));
+                                                    $set('selling_price', PosSaleResource::getDefaultPriceForProduct($productId, $state));
                                                 })
                                                 ->reactive()
                                                 ->nullable(),
@@ -200,7 +200,7 @@ class PosSaleResource extends BaseResource
                                         ->colStyles([
                                             'id_produk' => 'width: 40%;',
                                             'qty' => 'width: 10%;',
-                                            'harga_jual' => 'width: 30%;',
+                                            'selling_price' => 'width: 30%;',
                                             'kondisi' => 'width: 15%;',
                                         ]),
                                 ]),
@@ -518,7 +518,7 @@ class PosSaleResource extends BaseResource
      */
     protected static function resolveUnitPrice(array $item): int
     {
-        $price = $item['harga_jual'] ?? null;
+        $price = $item['selling_price'] ?? null;
 
         if ($price !== null && $price !== '') {
             return (int) $price;
@@ -542,7 +542,7 @@ class PosSaleResource extends BaseResource
     {
         $batch = self::getOldestAvailableBatch($productId, $condition);
 
-        return $batch?->harga_jual;
+        return $batch?->selling_price;
     }
 
     protected static function getOldestAvailableBatch(?int $productId, ?string $condition = null): ?PembelianItem

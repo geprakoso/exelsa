@@ -5,7 +5,7 @@
         $items = $items->all();
     }
 
-    $totalPembelian = collect($items)->sum(fn ($item) => (float) (data_get($item, 'hpp') ?? 0)
+    $totalPembelian = collect($items)->sum(fn ($item) => (float) (data_get($item, 'cost_price') ?? 0)
         * (int) (data_get($item, 'qty') ?? 0));
 @endphp
 
@@ -19,7 +19,7 @@
                 <th class="w-[8rem] px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200">Kondisi</th>
                 <th class="w-[5rem] px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200">Qty</th>
                 <th class="w-[10rem] px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Harga Beli</th>
-                <th class="w-[10rem] px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Harga Jual</th>
+                <th class="w-[10rem] px-4 py-3 text-right font-semibold text-gray-700 dark:text-gray-200">Selling Price</th>
             </tr>
         </thead>
 
@@ -37,8 +37,8 @@
                     $badgeColor = $badgeMap[strtolower($condition ?? '')] ?? 'primary';
                     $conditionLabel = $condition ? strtoupper((string) $condition) : '-';
 
-                    $hpp = (float) (data_get($item, 'hpp') ?? 0);
-                    $hargaJual = (float) (data_get($item, 'harga_jual') ?? 0);
+                    $costPrice = (float) (data_get($item, 'cost_price') ?? 0);
+                    $sellingPrice = (float) (data_get($item, 'selling_price') ?? 0);
 
                     // Parse serials data
                     $serials = data_get($item, 'serials');
@@ -70,10 +70,10 @@
                         {{ number_format((int) (data_get($item, 'qty') ?? 0), 0, ',', '.') }}
                     </td>
                     <td class="px-4 py-3 text-right text-gray-800 dark:text-gray-100 whitespace-nowrap">
-                        Rp {{ number_format($hpp, 0, ',', '.') }}
+                        Rp {{ number_format($costPrice, 0, ',', '.') }}
                     </td>
                     <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                        Rp {{ number_format($hargaJual, 0, ',', '.') }}
+                        Rp {{ number_format($sellingPrice, 0, ',', '.') }}
                     </td>
                 </tr>
             @empty

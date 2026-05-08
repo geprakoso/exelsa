@@ -205,37 +205,21 @@ function submit() {
                             </Button>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[380px] border-collapse text-sm">
-                                <thead>
-                                    <tr class="border-b text-muted-foreground">
-                                        <th class="py-2 text-left font-medium">Action</th>
-                                        <th class="py-2 text-left font-medium">Permission</th>
-                                        <th class="py-2 text-right font-medium">Enabled</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr
-                                        v-for="permission in group.permissions.sort((a, b) => a.action.localeCompare(b.action))"
-                                        :key="permission.id"
-                                        class="border-b last:border-b-0"
-                                    >
-                                        <td class="py-3">
-                                            {{ permission.action.replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) }}
-                                        </td>
-                                        <td class="py-3 text-muted-foreground">
-                                            {{ toReadableLabel(permission.name) }}
-                                        </td>
-                                        <td class="py-3 text-right">
-                                            <Checkbox
-                                                :model-value="isChecked(permission.name)"
-                                                :disabled="form.is_super_admin"
-                                                @update:model-value="(value) => togglePermission(permission.name, !!value)"
-                                            />
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <label
+                                v-for="permission in group.permissions.sort((a, b) => a.action.localeCompare(b.action))"
+                                :key="permission.id"
+                                class="flex items-center justify-between rounded-md border bg-background px-3 py-2"
+                            >
+                                <span class="text-sm font-medium">
+                                    {{ permission.action.replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) }}
+                                </span>
+                                <Checkbox
+                                    :model-value="isChecked(permission.name)"
+                                    :disabled="form.is_super_admin"
+                                    @update:model-value="(value) => togglePermission(permission.name, !!value)"
+                                />
+                            </label>
                         </div>
                     </Card>
                 </div>

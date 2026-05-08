@@ -42,12 +42,12 @@ class ListStockOpnames extends ListRecords
                         TextColumn::make('total_qty')
                             ->label('Stok Sistem')
                             ->state(fn(Produk $record) => (int) ($record->total_qty ?? 0)),
-                        TextColumn::make('latest_batch.hpp')
-                            ->label('HPP Terkini')
-                            ->state(fn(Produk $record) => InventoryResource::getInventorySnapshot($record)['latest_batch']['hpp'] ?? null),
-                        TextColumn::make('latest_batch.harga_jual')
+                        TextColumn::make('latest_batch.cost_price')
+                            ->label('Cost Price Terkini')
+                            ->state(fn(Produk $record) => InventoryResource::getInventorySnapshot($record)['latest_batch']['cost_price'] ?? null),
+                        TextColumn::make('latest_batch.selling_price')
                             ->label('Harga Jual Terkini')
-                            ->state(fn(Produk $record) => InventoryResource::getInventorySnapshot($record)['latest_batch']['harga_jual'] ?? null),
+                            ->state(fn(Produk $record) => InventoryResource::getInventorySnapshot($record)['latest_batch']['selling_price'] ?? null),
                         TextColumn::make('stok_opname')
                             ->label('Stok Opname')
                             ->state(fn() => null),

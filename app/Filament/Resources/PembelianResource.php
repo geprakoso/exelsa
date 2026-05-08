@@ -202,14 +202,14 @@ class PembelianResource extends BaseResource
                             //                 ->preload()
                             //                 ->required()
                             //                 ->native(false),
-                            //             TextInput::make('hpp')
-                            //                 ->label('HPP')
+                            //             TextInput::make('cost_price')
+                            //                 ->label('Cost Price')
                             //                 ->numeric()
                             //                 ->prefix('Rp ')
                             //                 ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 2) // format pemisah uang
                             //                 ->minValue(0)
                             //                 ->required(),
-                            //             TextInput::make('harga_jual')
+                            //             TextInput::make('selling_price')
                             //                 ->label('Harga Jual')
                             //                 ->numeric()
                             //                 ->prefix('Rp ')
@@ -232,8 +232,8 @@ class PembelianResource extends BaseResource
                             //                 ->native(false),
                             //         ])
                             //         ->colStyles([
-                            //             'hpp' => 'width: 180px;',
-                            //             'harga_jual' => 'width: 180px;',
+                            //             'cost_price' => 'width: 180px;',
+                            //             'selling_price' => 'width: 180px;',
                             //             'qty' => 'width: 80px;',
                             //             'kondisi' => 'width: 150px;',
                             //         ]) // format kolom size dan alignment
@@ -265,8 +265,8 @@ class PembelianResource extends BaseResource
                                     ->disableOptionsWhenSelectedInSiblingRepeaterItems() // Mencegah duplikasi produk
                                     ->afterStateUpdated(function (Set $set, ?int $state): void {
                                         $pricing = self::getLastRecordedPricingForProduct((int) ($state ?? 0));
-                                        $set('hpp', $pricing['hpp']);
-                                        $set('harga_jual', $pricing['harga_jual']);
+                                        $set('cost_price', $pricing['cost_price']);
+                                        $set('selling_price', $pricing['selling_price']);
                                     })
                                     ->columnSpan([
                                         'md' => 4, // Lebar sedang
@@ -313,15 +313,15 @@ class PembelianResource extends BaseResource
                                         'xl' => 1,
                                     ]),
 
-                                TextInput::make('hpp')
-                                    ->label('HPP (Beli)')
+                                TextInput::make('cost_price')
+                                    ->label('Cost Price (Beli)')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->currencyMask(thousandSeparator: '.', decimalSeparator: ',', precision: 0)
                                     ->live()
                                     ->placeholder(function (Get $get): ?string {
                                         $pricing = self::getLastRecordedPricingForProduct((int) $get('id_produk'));
-                                        $value = $pricing['hpp'];
+                                        $value = $pricing['cost_price'];
 
                                         if (is_null($value)) {
                                             return null;
@@ -334,17 +334,17 @@ class PembelianResource extends BaseResource
                                             return $state;
                                         }
 
-                                        return self::getLastRecordedPricingForProduct((int) $get('id_produk'))['hpp'];
+                                        return self::getLastRecordedPricingForProduct((int) $get('id_produk'))['cost_price'];
                                     })
                                     ->required(fn(Get $get): bool => filled($get('id_produk'))
-                                        && blank($get('hpp'))
-                                        && is_null(self::getLastRecordedPricingForProduct((int) $get('id_produk'))['hpp']))
+                                        && blank($get('cost_price'))
+                                        && is_null(self::getLastRecordedPricingForProduct((int) $get('id_produk'))['cost_price']))
                                     ->columnSpan([
                                         'md' => 2,
                                         'xl' => 2,
                                     ]),
 
-                                TextInput::make('harga_jual')
+                                TextInput::make('selling_price')
                                     ->label('Jual')
                                     ->numeric()
                                     ->prefix('Rp')
@@ -352,7 +352,7 @@ class PembelianResource extends BaseResource
                                     ->live()
                                     ->placeholder(function (Get $get): ?string {
                                         $pricing = self::getLastRecordedPricingForProduct((int) $get('id_produk'));
-                                        $value = $pricing['harga_jual'];
+                                        $value = $pricing['selling_price'];
 
                                         if (is_null($value)) {
                                             return null;
@@ -365,11 +365,11 @@ class PembelianResource extends BaseResource
                                             return $state;
                                         }
 
-                                        return self::getLastRecordedPricingForProduct((int) $get('id_produk'))['harga_jual'];
+                                        return self::getLastRecordedPricingForProduct((int) $get('id_produk'))['selling_price'];
                                     })
                                     ->required(fn(Get $get): bool => filled($get('id_produk'))
-                                        && blank($get('harga_jual'))
-                                        && is_null(self::getLastRecordedPricingForProduct((int) $get('id_produk'))['harga_jual']))
+                                        && blank($get('selling_price'))
+                                        && is_null(self::getLastRecordedPricingForProduct((int) $get('id_produk'))['selling_price']))
                                     ->columnSpan([
                                         'md' => 2,
                                         'xl' => 2,
@@ -449,8 +449,8 @@ class PembelianResource extends BaseResource
                                 'id_produk' => 'width: 30%;',
                                 'kondisi' => 'width: 12%;',
                                 'qty' => 'width: 8%;',
-                                'hpp' => 'width: 15%;',
-                                'harga_jual' => 'width: 15%;',
+                                'cost_price' => 'width: 15%;',
+                                'selling_price' => 'width: 15%;',
                                 'serials_count' => 'width: 20%;',
                             ]),
 
@@ -519,7 +519,7 @@ class PembelianResource extends BaseResource
                                 $items = $get('items') ?? [];
                                 $jasaItems = $get('jasaItems') ?? [];
 
-                                $totalBarang = collect($items)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['hpp'] ?? 0)));
+                                $totalBarang = collect($items)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['cost_price'] ?? 0)));
                                 $totalJasa = collect($jasaItems)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['harga'] ?? 0)));
 
                                 return 'Rp ' . number_format($totalBarang + $totalJasa, 0, ',', '.');
@@ -542,7 +542,7 @@ class PembelianResource extends BaseResource
                                 $jasaItems = $get('jasaItems') ?? [];
                                 $pembayaran = $get('pembayaran') ?? [];
 
-                                $totalBarang = collect($items)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['hpp'] ?? 0)));
+                                $totalBarang = collect($items)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['cost_price'] ?? 0)));
                                 $totalJasa = collect($jasaItems)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['harga'] ?? 0)));
                                 $grandTotal = $totalBarang + $totalJasa;
 
@@ -585,7 +585,7 @@ class PembelianResource extends BaseResource
                                         $jasaItems = $get('../../jasaItems') ?? [];
                                         $pembayaran = $get('../../pembayaran') ?? [];
 
-                                        $totalBarang = collect($items)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['hpp'] ?? 0)));
+                                        $totalBarang = collect($items)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['cost_price'] ?? 0)));
                                         $totalJasa = collect($jasaItems)->sum(fn($item) => ((int) ($item['qty'] ?? 0)) * ((int) ($item['harga'] ?? 0)));
                                         $grandTotal = $totalBarang + $totalJasa;
 
@@ -1308,7 +1308,7 @@ class PembelianResource extends BaseResource
     protected static function getLastRecordedPricingForProduct(int $productId): array
     {
         if ($productId < 1) {
-            return ['hpp' => null, 'harga_jual' => null];
+            return ['cost_price' => null, 'selling_price' => null];
         }
 
         $itemTable = (new PembelianItem)->getTable();
@@ -1323,21 +1323,21 @@ class PembelianResource extends BaseResource
             ->orderByDesc($itemTable . '.' . $primaryKey)
             ->select([
                 $itemTable . '.' . $primaryKey,
-                $itemTable . '.hpp',
-                $itemTable . '.harga_jual',
+                $itemTable . '.cost_price',
+                $itemTable . '.selling_price',
             ])
             ->first();
 
         if (! $lastItem) {
-            return ['hpp' => null, 'harga_jual' => null];
+            return ['cost_price' => null, 'selling_price' => null];
         }
 
-        $hpp = $lastItem->hpp;
-        $hargaJual = $lastItem->harga_jual;
+        $costPrice = $lastItem->cost_price;
+        $sellingPrice = $lastItem->selling_price;
 
         return [
-            'hpp' => is_null($hpp) ? null : (int) $hpp,
-            'harga_jual' => is_null($hargaJual) ? null : (int) $hargaJual,
+            'cost_price' => is_null($costPrice) ? null : (int) $costPrice,
+            'selling_price' => is_null($sellingPrice) ? null : (int) $sellingPrice,
         ];
     }
 }

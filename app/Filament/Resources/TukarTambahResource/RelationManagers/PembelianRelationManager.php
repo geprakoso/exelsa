@@ -61,7 +61,7 @@ class PembelianRelationManager extends RelationManager
                     ->color('success')
                     ->state(function (Pembelian $record): string {
                         $total = $record->items
-                            ? $record->items->sum(fn($item) => (int) ($item->hpp ?? 0) * (int) ($item->qty ?? 0))
+                            ? $record->items->sum(fn($item) => (int) ($item->cost_price ?? 0) * (int) ($item->qty ?? 0))
                             : 0;
 
                         return 'Rp ' . number_format((int) $total, 0, ',', '.');

@@ -19,6 +19,7 @@ export interface ProdukOption {
     brand: { id: number; nama_brand: string } | null
     kategori: { id: number; nama_kategori: string } | null
     image_url: string | null
+    stok_on_hand?: number
 }
 
 interface Props {
@@ -29,6 +30,7 @@ interface Props {
     disabled?: boolean
     class?: string
     endpoint?: string
+    inStockOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -115,7 +117,7 @@ function fetchOptions(query: string) {
         loading.value = true
         try {
             const { data } = await api.get(props.endpoint, {
-                params: { q: query, limit: 50 },
+                params: { q: query, limit: 50, in_stock: props.inStockOnly ? 1 : undefined },
             })
             options.value = data
         } catch (e) {
@@ -415,6 +417,9 @@ defineExpose({
                                     </template>
                                 </span>
                             </div>
+                            <span v-if="option.stok_on_hand !== undefined" class="text-xs shrink-0 ml-2" :class="option.stok_on_hand > 0 ? 'text-green-600 font-medium' : 'text-red-500'">
+                                Stok: {{ option.stok_on_hand }}
+                            </span>
                             <Check
                                 v-if="option.id === modelValue"
                                 class="ml-2 h-4 w-4 shrink-0 text-primary"
