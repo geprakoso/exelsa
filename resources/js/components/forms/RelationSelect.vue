@@ -228,9 +228,8 @@ function scrollToActive() {
 }
 
 function handleCreate() {
-  if (!searchQuery.value.trim()) return
-  emit('create', searchQuery.value.trim())
-  closeDropdown()
+    emit('create', searchQuery.value.trim())
+    closeDropdown()
 }
 
 // Watch for external changes
@@ -388,13 +387,13 @@ defineExpose({
             
             <!-- Create New Option -->
             <button
-              v-if="enableCreate && searchQuery.trim()"
+              v-if="enableCreate"
               type="button"
               class="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-md transition-colors"
               @click="handleCreate"
             >
               <Plus class="h-4 w-4" />
-              {{ createLabel }} "{{ searchQuery }}"
+              {{ createLabel }}<template v-if="searchQuery.trim()"> "{{ searchQuery }}"</template>
             </button>
           </div>
           

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\IndonesiaController;
 use App\Http\Controllers\Api\ProdukImageController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,4 +22,9 @@ Route::middleware(['auth', 'web'])->group(function () {
     Route::post('/produk-images/{image}/primary', [ProdukImageController::class, 'setPrimary']);
     Route::delete('/produk-images/{image}', [ProdukImageController::class, 'destroy']);
     Route::post('/produk/{produk}/images/reorder', [ProdukImageController::class, 'reorder']);
+
+    // Indonesia Location API Routes
+    Route::get('/indonesia/provinces', [IndonesiaController::class, 'provinces']);
+    Route::get('/indonesia/cities', [IndonesiaController::class, 'cities']);
+    Route::get('/indonesia/districts', [IndonesiaController::class, 'districts']);
 });

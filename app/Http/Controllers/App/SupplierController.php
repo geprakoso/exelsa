@@ -41,7 +41,15 @@ class SupplierController extends Controller
             'kecamatan' => 'nullable|string|max:100',
         ]);
 
-        Supplier::create($validated);
+        $supplier = Supplier::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'id' => $supplier->id,
+                'nama_supplier' => $supplier->nama_supplier,
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Supplier created successfully');
     }
 
